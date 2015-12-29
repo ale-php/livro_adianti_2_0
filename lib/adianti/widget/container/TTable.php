@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Container;
+namespace Adianti\Widget\Container;
 
 use Adianti\Widget\Base\TElement;
 use Adianti\Widget\Container\TTableRow;

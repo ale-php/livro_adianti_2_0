@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Menu;
+namespace Adianti\Widget\Menu;
 
 use Adianti\Widget\Menu\TMenuItem;
 use Adianti\Widget\Base\TElement;
@@ -22,12 +22,13 @@ class TMenu extends TElement
     private $menu_class;
     private $item_class;
     private $menu_level;
+    private $link_class;
     
     /**
      * Class Constructor
      * @param $xml SimpleXMLElement parsed from XML Menu
      */
-    public function __construct($xml, $permission_callback = NULL, $menu_level = 1, $menu_class = 'dropdown-menu', $item_class = '')
+    public function __construct($xml, $permission_callback = NULL, $menu_level = 1, $menu_class = 'dropdown-menu', $item_class = '', $link_class = 'dropdown-toggle')
     {
         parent::__construct('ul');
         $this->items = array();
@@ -36,6 +37,7 @@ class TMenu extends TElement
         $this->menu_class = $menu_class;
         $this->menu_level = $menu_level;
         $this->item_class = $item_class;
+        $this->link_class = $link_class;
         
         if ($xml instanceof SimpleXMLElement)
         {
@@ -75,12 +77,17 @@ class TMenu extends TElement
             $action   = (string) $xmlElement-> action;
             $icon     = (string) $xmlElement-> icon;
             $menu     = NULL;
-            $menuItem = new TMenuItem($label, $action, $icon);
+            $menuItem = new TMenuItem($label, $action, $icon, $this->menu_level);
+            $menuItem->setLinkClass($this->link_class);
             
             if ($xmlElement->menu)
             {
-                $menu = new TMenu($xmlElement-> menu-> menuitem, $permission_callback, $this->menu_level +1, $this->menu_class, $this->item_class);
+                $menu = new TMenu($xmlElement-> menu-> menuitem, $permission_callback, $this->menu_level +1, $this->menu_class, $this->item_class, $this->link_class);
                 $menuItem->setMenu($menu);
+                if ($this->item_class)
+                {
+                    $menuItem->{'class'} = $this->item_class;
+                }
             }
             
             // just child nodes have actions

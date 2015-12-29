@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Container;
+namespace Adianti\Widget\Container;
 
 use Adianti\Widget\Base\TElement;
 use Adianti\Widget\Container\TNotebook;
@@ -28,7 +28,7 @@ class TFrame extends TElement
     public function __construct($width = NULL, $height = NULL)
     {
         parent::__construct('fieldset');
-        $this->{'id'}    = 'tfieldset_' . uniqid();
+        $this->{'id'}    = 'tfieldset_' . mt_rand(1000000000, 1999999999);
         $this->{'class'} = 'tframe';
         
         $this->width = $width;
@@ -72,134 +72,6 @@ class TFrame extends TElement
     public function getLegend()
     {
         return $this->legend;
-    }
-    
-    /**
-     * returns js code to show frame contents recursivelly
-     * used just along with TUIBuilder
-     * @ignore-autocomplete on
-     */
-    public function _getShowCode()
-    {
-        $panel_id = $this->getId();
-        $code = "document.getElementById('{$panel_id}').style.visibility='visible';";
-        $children = $this->getChildren();
-        $uibuilder = (isset($children[1]) AND !$children[1] instanceof TLabel) ? $children[1] : $children[0];
-        if ($uibuilder)
-        {
-            if ($uibuilder instanceof TNotebook OR $uibuilder instanceof TFrame)
-            {
-                $code .= $uibuilder->_getHideCode();
-            }
-            else if (method_exists($uibuilder, 'getChildren'))
-            {
-                if ($uibuilder->getChildren())
-                {
-                    foreach ($uibuilder->getChildren() as $object) // run through telement conteiners (position)
-                    {
-                        if (method_exists($object, 'getChildren'))
-                        {
-                            if ($object->getChildren())
-                            {
-                                foreach ($object->getChildren() as $child)
-                                {
-                                    if (($child instanceof TFrame) or ($child instanceof TNotebook))
-                                    {
-                                        $code.=$child->_getShowCode();
-                                    }
-                                }
-                             }
-                        }
-                    }
-                }
-            }
-        }
-        return $code;
-    }
-    
-    /**
-     * returns js code to hide frame contents recursivelly
-     * used just along with TUIBuilder
-     * @ignore-autocomplete on
-     */
-    public function _getHideCode()
-    {
-        $panel_id = $this->getId();
-        $code = "document.getElementById('{$panel_id}').style.visibility='hidden';";
-        $children = $this->getChildren();
-        $uibuilder = (isset($children[1]) AND !$children[1] instanceof TLabel) ? $children[1] : $children[0];
-        if ($uibuilder)
-        {
-            if ($uibuilder instanceof TNotebook OR $uibuilder instanceof TFrame)
-            {
-                $code .= $uibuilder->_getHideCode();
-            }
-            else if (method_exists($uibuilder, 'getChildren'))
-            {
-                if ($uibuilder->getChildren())
-                {
-                    foreach ($uibuilder->getChildren() as $object) // run through telement conteiners (position)
-                    {
-                        if (method_exists($object, 'getChildren'))
-                        {
-                            if ($object->getChildren())
-                            {
-                                foreach ($object->getChildren() as $child)
-                                {
-                                    if (($child instanceof TFrame) or ($child instanceof TNotebook))
-                                    {
-                                        $code.=$child->_getHideCode();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return $code;
-    }
-    
-    /**
-     * return the ID's of every child notebook
-     * @ignore-autocomplete on
-     */
-    public function _getSubNotes()
-    {
-        $panel_id = $this->getId();
-        $children = $this->getChildren();
-        $uibuilder = (isset($children[1]) AND !$children[1] instanceof TLabel) ? $children[1] : $children[0];
-        $returnValue = array();
-        if ($uibuilder)
-        {
-            if ($uibuilder instanceof TNotebook OR $uibuilder instanceof TFrame)
-            {
-                $returnValue = array_merge($returnValue, $uibuilder->_getSubNotes());
-            }
-            else if (method_exists($uibuilder, 'getChildren'))
-            {
-                if ($uibuilder->getChildren())
-                {
-                    foreach ($uibuilder->getChildren() as $object) // run through telement conteiners (position)
-                    {
-                        if (method_exists($object, 'getChildren'))
-                        {
-                            if ($object->getChildren())
-                            {
-                                foreach ($object->getChildren() as $child)
-                                {
-                                    if ($child instanceof TNotebook)
-                                    {
-                                        $returnValue = array_merge($returnValue, array($child->getId()), (array)$child->_getSubNotes());
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return $returnValue;
     }
     
     /**

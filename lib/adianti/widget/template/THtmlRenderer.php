@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Template;
+namespace Adianti\Widget\Template;
 
 use Adianti\Core\AdiantiCoreTranslator;
 use Exception;

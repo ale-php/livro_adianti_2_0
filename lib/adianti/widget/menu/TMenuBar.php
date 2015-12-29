@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Menu;
+namespace Adianti\Widget\Menu;
 
 use Adianti\Widget\Menu\TMenu;
 use Adianti\Widget\Base\TElement;
@@ -23,7 +23,7 @@ class TMenuBar extends TElement
     {
         parent::__construct('div');
         $this->{'style'} = 'margin: 0;';
-        $this->{'class'} = 'nav navbar-nav';
+        $this->{'class'} = 'navbar';
     }
     
     /**
@@ -46,7 +46,9 @@ class TMenuBar extends TElement
             }
             
             $menubar = new TMenuBar;
-            $menubar->{'class'} = $bar_class;
+            $ul = new TElement('ul');
+            $ul->{'class'} = $bar_class;
+            $menubar->add($ul);
             foreach ($xml as $xmlElement)
             {
                 $atts   = $xmlElement->attributes();
@@ -54,26 +56,19 @@ class TMenuBar extends TElement
                 $action = (string) $xmlElement-> action;
                 $icon   = (string) $xmlElement-> icon;
                 
-                $button_div = new TElement('div');
-                $button_div->{'class'} = 'btn-group';
-                
-                $button = new TElement('button');
-                $button->{'data-toggle'} = 'dropdown';
-                $button->{'class'} = 'btn btn-default dropdown-toggle';
-                $button->add($label);
-                
-                $span = new TElement('span');
-                $span->{'class'} = 'caret';
-                $span->add('');
-                $button->add($span);
+                $item = new TMenuItem($label, $action, $icon);
                 $menu = new TMenu($xmlElement-> menu-> menuitem, $permission_callback, 1, $menu_class, $item_class);
-                
+
                 // check children count (permissions)
                 if (count($menu->getMenuItems()) >0)
                 {
-                    $button_div->add($button);
-                    $button_div->add($menu);
-                    $menubar->add($button_div);
+                    $item->setMenu($menu);
+                    $item->{'class'} = 'active';
+                    $ul->add($item);
+                }
+                else if ($action)
+                {
+                    $ul->add($item);
                 }
             }
             
@@ -86,7 +81,7 @@ class TMenuBar extends TElement
      */
     public function show()
     {
-        TScript::create( 'tmenubar_start()' );
+        TScript::create( 'tmenubar_start();' );
         parent::show();
     }
 }

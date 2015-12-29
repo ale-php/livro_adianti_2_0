@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Database;
+namespace Adianti\Database;
 
 use Adianti\Core\AdiantiCoreTranslator;
 use Adianti\Database\TTransaction;
@@ -26,6 +26,7 @@ use Exception;
 abstract class TRecord
 {
     protected $data;  // array containing the data of the object
+    protected $vdata; // array with virtual data (non-persistant properties)
     protected $attributes; // array of attributes
     
     /**
@@ -110,6 +111,10 @@ abstract class TRecord
                 {
                     return $this->data[$property];
                 }
+                else if (isset($this->vdata[$property]))
+                {
+                    return $this->vdata[$property];
+                }
             }
         }
     }
@@ -138,10 +143,17 @@ abstract class TRecord
             {
                 unset($this->data[$property]);
             }
-            else
+            else if (is_scalar($value))
             {
                 // assign the property's value
                 $this->data[$property] = $value;
+                unset($this->vdata[$property]);
+            }
+            else
+            {
+                // other non-scalar properties that won't be persisted
+                $this->vdata[$property] = $value;
+                unset($this->data[$property]);
             }
         }
     }
@@ -152,7 +164,9 @@ abstract class TRecord
      */
     public function __isset($property)
     {
-        return isset($this->data[$property]) or method_exists($this, 'get_'.$property);
+        return isset($this->data[$property]) or
+               isset($this->vdata[$property]) or
+               method_exists($this, 'get_'.$property);
     }
     
     /**
@@ -162,6 +176,7 @@ abstract class TRecord
     public function __unset($property)
     {
         unset($this->data[$property]);
+        unset($this->vdata[$property]);
     }
     
     /**
@@ -251,7 +266,23 @@ abstract class TRecord
      */
     public function fromArray($data)
     {
-        $this->data = $data;
+        if (count($this->attributes) > 0)
+        {
+            $pk = $this->getPrimaryKey();
+            foreach ($data as $key => $value)
+            {
+                // set just attributes defined by the addAttribute()
+                if ((in_array($key, $this->attributes) AND is_string($key)) OR ($key === $pk))
+                {
+                    $this->data[$key] = $data[$key];
+                }
+            }
+
+        }
+        else
+        {
+            $this->data = $data;
+        }
     }
     
     /**
@@ -260,18 +291,32 @@ abstract class TRecord
      */
     public function toArray()
     {
-        $data = $this->data;
+        $data = array();
         if (count($this->attributes) > 0)
         {
-            foreach ($this->attributes as $attribute)
+            $pk = $this->getPrimaryKey();
+            foreach ($this->data as $key => $value)
             {
-                if (!isset($data[$attribute]))
+                if ((in_array($key, $this->attributes) AND is_string($key)) OR ($key === $pk))
                 {
-                    $data[$attribute] = NULL;
+                    $data[$key] = $this->data[$key];
                 }
             }
         }
+        else
+        {
+            $data = $this->data;
+        }
         return $data;
+    }
+    
+    /**
+     * Return the Active Record properties as a json string
+     * @return A JSON String
+     */
+    public function toJson()
+    {
+        return json_encode($this->toArray());
     }
     
     /**
@@ -300,7 +345,14 @@ abstract class TRecord
         // check if the object has an ID or exists in the database
         $pk = $this->getPrimaryKey();
         
-        if (empty($this->data[$pk]) or (!self::load($this->$pk)))
+        if (method_exists($this, 'onBeforeStore'))
+        {
+            $virtual_object = (object) $this->data;
+            $this->onBeforeStore( $virtual_object );
+            $this->data = (array) $virtual_object;
+        }
+        
+        if (empty($this->data[$pk]) or (!self::exists($this->$pk)))
         {
             // increments the ID
             if (empty($this->data[$pk]))
@@ -326,16 +378,16 @@ abstract class TRecord
                     if (count($this->attributes) > 0)
                     {
                         // set just attributes defined by the addAttribute()
-                        if ((in_array($key, $this->attributes)) OR ($key == $pk))
+                        if ((in_array($key, $this->attributes) AND is_string($key)) OR ($key === $pk))
                         {
                             // pass the object data to the SQL
-                            $sql->setRowData($key, $this->$key);
+                            $sql->setRowData($key, $this->data[$key]);
                         }
                     }
                     else
                     {
                         // pass the object data to the SQL
-                        $sql->setRowData($key, $this->$key);
+                        $sql->setRowData($key, $this->data[$key]);
                     }
                 }
             }
@@ -360,16 +412,16 @@ abstract class TRecord
                         if (count($this->attributes) > 0)
                         {
                             // set just attributes defined by the addAttribute()
-                            if ((in_array($key, $this->attributes)) OR ($key == $pk))
+                            if ((in_array($key, $this->attributes) AND is_string($key)) OR ($key === $pk))
                             {
                                 // pass the object data to the SQL
-                                $sql->setRowData($key, $this->$key);
+                                $sql->setRowData($key, $this->data[$key]);
                             }
                         }
                         else
                         {
                             // pass the object data to the SQL
-                            $sql->setRowData($key, $this->$key);
+                            $sql->setRowData($key, $this->data[$key]);
                         }
                     }
                 }
@@ -410,8 +462,68 @@ abstract class TRecord
                 }
             }
             
+            if (method_exists($this, 'onAfterStore'))
+            {
+                $this->onAfterStore( (object) $this->toArray() );
+            }
+            
             // return the result of the exec() method
             return $result;
+        }
+        else
+        {
+            // if there's no active transaction opened
+            throw new Exception(AdiantiCoreTranslator::translate('No active transactions') . ': ' . __METHOD__ .' '. $this->getEntity());
+        }
+    }
+    
+    /**
+     * Tests if an ID exists
+     * @param $id  The object ID
+     * @exception  Exception if there's no active transaction opened
+     */
+    public function exists($id)
+    {
+        if (empty($id))
+        {
+            return FALSE;
+        }
+        
+        $class = get_class($this);     // get the Active Record class name
+        $pk = $this->getPrimaryKey();  // discover the primary key name
+        
+        // creates a SELECT instruction
+        $sql = new TSqlSelect;
+        $sql->setEntity($this->getEntity());
+        $sql->addColumn('*');
+        
+        // creates a select criteria based on the ID
+        $criteria = new TCriteria;
+        $criteria->add(new TFilter($pk, '=', $id));
+        $sql->setCriteria($criteria);
+        
+        // get the connection of the active transaction
+        if ($conn = TTransaction::get())
+        {
+            $dbinfo = TTransaction::getDatabaseInfo(); // get dbinfo
+            if (isset($dbinfo['prep']) AND $dbinfo['prep'] == '1') // prepared ON
+            {
+                $result = $conn-> prepare( $sql->getInstruction( TRUE ) , array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+                $result-> execute( $criteria->getPreparedVars() );
+            }
+            else
+            {
+                $result = $conn-> query($sql->getInstruction());
+            }
+            
+            // if there's a result
+            if ($result)
+            {
+                // returns the data as an object of this class
+                $object = $result-> fetchObject(get_class($this));
+            }
+            
+            return is_object($object);
         }
         else
         {
@@ -442,15 +554,29 @@ abstract class TRecord
         $class = get_class($this);     // get the Active Record class name
         $pk = $this->getPrimaryKey();  // discover the primary key name
         
+        if (method_exists($this, 'onBeforeLoad'))
+        {
+            $this->onBeforeLoad( $id );
+        }
+        
         if ( $cache = $this->getCacheControl() )
         {
             $record_key = $class . '['. $id . ']';
-            if ($fetched_object_array = $cache::getValue( $record_key ))
+            if ($fetched_data = $cache::getValue( $record_key ))
             {
-                $fetched_object = clone $this;
-                $fetched_object->fromArray($fetched_object_array);
+                $fetched_object = (object) $fetched_data;
+                $loaded_object  = clone $this;
+                if (method_exists($this, 'onAfterLoad'))
+                {
+                    $this->onAfterLoad( $fetched_object );
+                    $loaded_object->fromArray( (array) $fetched_object);
+                }
+                else
+                {
+                    $loaded_object->fromArray($fetched_data);
+                }
                 TTransaction::log($record_key . ' loaded from cache');
-                return $fetched_object;
+                return $loaded_object;
             }
         }
         
@@ -485,8 +611,19 @@ abstract class TRecord
             // if there's a result
             if ($result)
             {
-                // returns the data as an object of this class
-                $object = $result->fetchObject(get_class($this));
+                if (method_exists($this, 'onAfterLoad'))
+                {
+                    $fetched_object = $result-> fetchObject();
+                    $this->onAfterLoad($fetched_object);
+                    $activeClass = get_class($this);
+                    $object = new $activeClass;
+                    $object->fromArray( (array) $fetched_object );
+                }
+                else
+                {
+                    // returns the data as an object of this class
+                    $object = $result-> fetchObject(get_class($this));
+                }
                 
                 if ($object)
                 {
@@ -518,6 +655,11 @@ abstract class TRecord
     public function delete($id = NULL)
     {
         $class = get_class($this);
+        
+        if (method_exists($this, 'onBeforeDelete'))
+        {
+            $this->onBeforeDelete( (object) $this->toArray() );
+        }
         
         // discover the primary key name
         $pk = $this->getPrimaryKey();
@@ -551,8 +693,6 @@ abstract class TRecord
                 $result = $conn-> query($sql->getInstruction());
             }
             
-            unset($this->data);
-            
             if ( $cache = $this->getCacheControl() )
             {
                 $record_key = $class . '['. $id . ']';
@@ -561,6 +701,13 @@ abstract class TRecord
                     TTransaction::log($record_key . ' deleted from cache');
                 }
             }
+            
+            if (method_exists($this, 'onAfterDelete'))
+            {
+                $this->onAfterDelete( (object) $this->toArray() );
+            }
+            
+            unset($this->data);
             
             // return the result of the exec() method
             return $result;
@@ -654,22 +801,66 @@ abstract class TRecord
     }
     
     /**
+     * Method countObjects
+     * @param $criteria        Optional criteria
+     * @return                 An array containing the Active Records
+     */
+    public static function countObjects($criteria = NULL )
+    {
+        // get the Active Record class name
+        $class = get_called_class();
+        
+        // create the repository
+        $repository = new TRepository( $class );
+        if(!$criteria)
+        {
+            $criteria = new TCriteria;
+        }
+        
+        return $repository->count( $criteria );
+    }
+    
+    /**
      * Load composite objects (parts in composition relationship)
      * @param $composite_class Active Record Class for composite objects
      * @param $foreign_key Foreign key in composite objects
      * @param $id Primary key of parent object
      * @returns Array of Active Records
      */
-    public function loadComposite($composite_class, $foreign_key, $id)
+    public function loadComposite($composite_class, $foreign_key, $id = NULL, $order = NULL)
     {
+        // discover the primary key name
+        $pk = $this->getPrimaryKey();
+        // if the user has not passed the ID, take the object ID
+        $id = $id ? $id : $this->$pk;
+
         $criteria = new TCriteria;
         $criteria->add(new TFilter($foreign_key, '=', $id));
+        if ($order)
+        {
+            $criteria->setProperty('order', $order);
+        }
         
         $repository = new TRepository($composite_class);
         $objects = $repository->load($criteria);
         return $objects;
     }
 
+    /**
+     * Load composite objects. Shortcut for loadComposite
+     * @param $composite_class Active Record Class for composite objects
+     * @param $foreign_key Foreign key in composite objects
+     * @param $local_id Primary key of parent object
+     * @returns Array of Active Records
+     */
+    public function hasMany($composite_class, $foreign_key = NULL, $local_id = NULL, $order = NULL)
+    {
+        $class = get_class($this);
+        $foreign_key = isset($foreign_key) ? $foreign_key : $this->underscoreFromCamelCase($class) . '_id';
+        $local_id = $local_id ? $local_id : $this->getPrimaryKey();
+        return $this->loadComposite($composite_class, $foreign_key, $this->$local_id, $order);
+    }
+    
     /**
      * Delete composite objects (parts in composition relationship)
      * @param $composite_class Active Record Class for composite objects
@@ -715,8 +906,13 @@ abstract class TRecord
      * @param $id Primary key of parent object
      * @returns Array of Active Records
      */
-    public function loadAggregate($aggregate_class, $join_class, $foreign_key_parent, $foreign_key_child, $id)
+    public function loadAggregate($aggregate_class, $join_class, $foreign_key_parent, $foreign_key_child, $id = NULL)
     {
+        // discover the primary key name
+        $pk = $this->getPrimaryKey();
+        // if the user has not passed the ID, take the object ID
+        $id = $id ? $id : $this->$pk;
+        
         $criteria   = new TCriteria;
         $criteria->add(new TFilter($foreign_key_parent, '=', $id));
         
@@ -732,6 +928,25 @@ abstract class TRecord
             }
         }
         return $aggregates;
+    }
+    
+    /**
+     * Load aggregated objects. Shortcut to loadAggregate
+     * @param $aggregate_class Active Record Class for aggregated objects
+     * @param $join_class Active Record Join Class (Parent / Aggregated)
+     * @param $foreign_key_parent Foreign key in Join Class to parent object
+     * @param $foreign_key_child Foreign key in Join Class to child object
+     * @param $id Primary key of parent object
+     * @returns Array of Active Records
+     */
+    public function belongsToMany($aggregate_class, $join_class = NULL, $foreign_key_parent = NULL, $foreign_key_child = NULL)
+    {
+        $class = get_class($this);
+        $join_class = isset($join_class) ? $join_class : $class.$aggregate_class;
+        $foreign_key_parent = isset($foreign_key_parent) ? $foreign_key_parent : $this->underscoreFromCamelCase($class) . '_id';
+        $foreign_key_child  = isset($foreign_key_child)  ? $foreign_key_child  : $this->underscoreFromCamelCase($aggregate_class) . '_id';
+        
+        return $this->loadAggregate($aggregate_class, $join_class, $foreign_key_parent, $foreign_key_child);
     }
     
     /**
@@ -756,5 +971,92 @@ abstract class TRecord
                 $join->store();
             }
         }
+    }
+    
+    /**
+     * Find a Active Record and returns it
+     * @return The Active Record itself or NULL when not found
+     */
+    public static function find($id)
+    {
+        $classname = get_called_class();
+        $ar = new $classname;
+        return $ar->load($id);
+    }
+    
+    /**
+     * Returns all objects
+     */
+    public static function all()
+    {
+        return self::getObjects();
+    }
+    
+    /**
+     * Save the object
+     */
+    public function save()
+    {
+        $this->store();
+    }
+    
+    /**
+     * Creates an indexed array
+     * @returns the TRepository object with a filter
+     */
+    public static function getIndexedArray($indexColumn, $valueColumn)
+    {
+        $indexedArray = array();
+        $class = get_called_class(); // get the Active Record class name
+        $repository = new TRepository( $class ); // create the repository
+        $objects = $repository->load();
+        if ($objects)
+        {
+            foreach ($objects as $object)
+            {
+                $indexedArray[ $object->$indexColumn ] = $object->$valueColumn;
+            }
+        }
+        return $indexedArray;
+    }
+    
+    /**
+     * Creates a Repository with filter
+     * @returns the TRepository object with a filter
+     */
+    public static function where($variable, $operator, $value, $logicOperator = TExpression::AND_OPERATOR)
+    {
+        $class = get_called_class(); // get the Active Record class name
+        $repository = new TRepository( $class ); // create the repository
+        return $repository->where($variable, $operator, $value, $logicOperator);
+    }
+    
+    /**
+     * Creates a Repository with OR filter
+     * @returns the TRepository object with an OR filter
+     */
+    public static function orWhere($variable, $operator, $value)
+    {
+        $class = get_called_class(); // get the Active Record class name
+        $repository = new TRepository( $class ); // create the repository
+        return $repository->orWhere($variable, $operator, $value);
+    }
+    
+    /**
+     * Creates an ordered repository
+     * @param  $order = Order column
+     * @param  $direction = Order direction (asc, desc)
+     * @returns the ordered TRepository object
+     */
+    public static function orderBy($order, $direction = 'asc')
+    {
+        $class = get_called_class(); // get the Active Record class name
+        $repository = new TRepository( $class ); // create the repository
+        return $repository->orderBy( $order, $direction );
+    }
+    
+    private function underscoreFromCamelCase($string)
+    {
+        return strtolower(preg_replace('/([a-z])([A-Z])/', '$'.'1_$'.'2', $string)); 
     }
 }

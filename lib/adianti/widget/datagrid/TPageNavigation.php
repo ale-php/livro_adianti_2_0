@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Datagrid;
+namespace Adianti\Widget\Datagrid;
 
 use Adianti\Core\AdiantiCoreTranslator;
 use Adianti\Widget\Base\TElement;
@@ -27,6 +27,7 @@ class TPageNavigation
     private $first_page;
     private $action;
     private $width;
+    private $direction;
     
     /**
      * Set the Amount of displayed records
@@ -83,6 +84,15 @@ class TPageNavigation
     }
     
     /**
+     * Define the ordering
+     * @param $direction asc, desc
+     */
+    public function setDirection($direction)
+    {
+        $this->direction = $direction;
+    }
+        
+    /**
      * Set the page navigation properties
      * @param $properties array of properties
      */
@@ -90,10 +100,12 @@ class TPageNavigation
     {
         $order      = isset($properties['order'])  ? addslashes($properties['order'])  : '';
         $page       = isset($properties['page'])   ? $properties['page']   : 1;
+        $direction  = (isset($properties['direction']) AND in_array($properties['direction'], array('asc', 'desc')))  ? $properties['direction']   : NULL;
         $first_page = isset($properties['first_page']) ? $properties['first_page']: 1;
         
         $this->setOrder($order);
         $this->setPage($page);
+        $this->setDirection($direction);
         $this->setFirstPage($first_page);
     }
     
@@ -144,46 +156,52 @@ class TPageNavigation
         $pages += $resto>0 ? 1 : 0;
         $last_page = min($pages, $max);
         
-        $div = new TElement('div');
-        $div->{'class'} = 'tpagenavigation';
-        $div-> align = 'center';
+        $nav = new TElement('nav');
+        $nav->{'class'} = 'tpagenavigation';
+        $nav-> align = 'center';
         
-        $table = new TTable;
-        $table-> cellpadding=0;
-        $table-> cellspacing=0;
-        $row = $table->addRow();
+        $ul = new TElement('ul');
+        $ul->{'class'} = 'pagination';
+        $nav->add($ul);
         
-        //previous
+        // previous
+        $item = new TElement('li');
         $link = new TElement('a');
         $span = new TElement('span');
-        $cell = $row->addCell($link);
+        $link->{'href'} = '#';
+        $link->{'aria-label'} = 'Previous';
+        $ul->add($item);
+        $item->add($link);
         $link->add($span);
-        $cell->{'class'} = 'prev';
         
         if ($first_page > 1)
         {
-            $this->action->setParameter('offset', ($first_page - $max) * $page_size);
+            $this->action->setParameter('offset', ($first_page - $max -1) * $page_size);
             $this->action->setParameter('limit',  $page_size);
+            $this->action->setParameter('direction', $this->direction);
             $this->action->setParameter('page',   $first_page - $max);
             $this->action->setParameter('first_page', $first_page - $max);
             $this->action->setParameter('order', $this->order);
             
             $link-> href      = $this->action->serialize();
             $link-> generator = 'adianti';
-            $span->add('&lt;&lt;');
+            $span->add('&laquo;');
         }
         else
         {
-            $span->add('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+            $span->add('&nbsp;');
         }
         
         for ($n = $first_page; $n <= $last_page + $first_page -1; $n++)
         {
             $offset = ($n -1) * $page_size;
+            $item = new TElement('li');
             $link = new TElement('a');
+            $span = new TElement('span');
             
             $this->action->setParameter('offset', $offset);
             $this->action->setParameter('limit',  $page_size);
+            $this->action->setParameter('direction', $this->direction);
             $this->action->setParameter('page',   $n);
             $this->action->setParameter('first_page', $first_page);
             $this->action->setParameter('order', $this->order);
@@ -191,32 +209,36 @@ class TPageNavigation
             $link-> href      = $this->action->serialize();
             $link-> generator = 'adianti';
             
-            $span = new TElement('span');
-            $span->add($n);
-            $cell = $row->addCell($link);
+            $ul->add($item);
+            $item->add($link);
             $link->add($span);
+            $span->add($n);
             
             if($this->page == $n)
             {
-                $cell->{'class'}='on';
+                $item->{'class'} = 'active';
             }
         }
         
         for ($z=$n; $z<=10; $z++)
         {
+            $item = new TElement('li');
             $link = new TElement('a');
             $span = new TElement('span');
-            $span->add($z);
-            $cell = $row->addCell($link);
+            $item->{'class'} = 'off';
+            $ul->add($item);
+            $item->add($link);
             $link->add($span);
-            $cell->{'class'}='off';
+            $span->add($z);
         }
         
+        $item = new TElement('li');
         $link = new TElement('a');
         $span = new TElement('span');
-        $cell = $row->addCell($link);
+        $link->{'aria-label'} = "Next";
+        $ul->add($item);
+        $item->add($link);
         $link->add($span);
-        $cell->{'class'} = 'next';
         
         if ($pages > $max)
         {
@@ -225,20 +247,20 @@ class TPageNavigation
             
             $this->action->setParameter('offset',  $offset);
             $this->action->setParameter('limit',   $page_size);
+            $this->action->setParameter('direction', $this->direction);
             $this->action->setParameter('page',    $n);
             $this->action->setParameter('first_page', $first_page);
             $this->action->setParameter('order', $this->order);
             $link-> href      = $this->action->serialize();
             $link-> generator = 'adianti';
             
-            $span->add('&nbsp; &gt;&gt; &nbsp; ');
+            $span->add('&raquo;');
         }
         else
         {
-            $span->add('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+            $span->add('&nbsp;');
         }
         
-        $div->add($table);
-        $div->show();
+        $nav->show();
     }
 }

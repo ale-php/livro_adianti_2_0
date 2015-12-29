@@ -1,7 +1,7 @@
 <?php
-Namespace Adianti\Database;
+namespace Adianti\Database;
 
-Use Adianti\Core\AdiantiCoreTranslator;
+use Adianti\Core\AdiantiCoreTranslator;
 use PDO;
 use Exception;
 
@@ -60,6 +60,7 @@ final class TConnection
         $type  = isset($db['type']) ? $db['type'] : NULL;
         $port  = isset($db['port']) ? $db['port'] : NULL;
         $char  = isset($db['char']) ? $db['char'] : NULL;
+        $type  = strtolower($type);
         
         // each database driver has a different instantiation process
         switch ($type)
@@ -93,12 +94,18 @@ final class TConnection
                 break;
             case 'mssql':
                 if (OS == 'WIN')
+                {
                     $conn = new PDO("sqlsrv:Server={$host};Database={$name}", $user, $pass);
+                }
                 else
-                    $conn = new PDO("dblib:host={$host};dbname={$name}", $user, $pass);
+                {
+                    $port = $port ? $port : '1433';
+                    $conn = new PDO("dblib:host={$host}:{$port};dbname={$name}", $user, $pass);
+                }
                 break;
             case 'dblib':
-                $conn = new PDO("dblib:host={$host},1433;dbname={$name}", $user, $pass);
+                $port = $port ? $port : '1433';
+                $conn = new PDO("dblib:host={$host},{$port};dbname={$name}", $user, $pass);
                 break;
             default:
                 throw new Exception(AdiantiCoreTranslator::translate('Driver not found') . ': ' . $type);

@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Database;
+namespace Adianti\Database;
 
 use Adianti\Database\TExpression;
 use Adianti\Database\TSqlStatement;
@@ -66,7 +66,7 @@ class TFilter extends TExpression
                 {
                     if ($prepared)
                     {
-                        $preparedVar = ':par_'.uniqid();
+                        $preparedVar = ':par_'.$this->getRandomParameter();
                         $this->preparedVars[ $preparedVar ] = $x;
                         $foo[] = $preparedVar;
                     }
@@ -80,7 +80,7 @@ class TFilter extends TExpression
                     // if the value is an string, add quotes
                     if ($prepared)
                     {
-                        $preparedVar = ':par_'.uniqid();
+                        $preparedVar = ':par_'.$this->getRandomParameter();
                         $this->preparedVars[ $preparedVar ] = $x;
                         $foo[] = $preparedVar;
                     }
@@ -112,7 +112,7 @@ class TFilter extends TExpression
         {
             if ($prepared)
             {
-                $preparedVar = ':par_'.uniqid();
+                $preparedVar = ':par_'.$this->getRandomParameter();
                 $this->preparedVars[ $preparedVar ] = $value;
                 $result = $preparedVar;
             }
@@ -144,7 +144,7 @@ class TFilter extends TExpression
         {
             if ($prepared)
             {
-                $preparedVar = ':par_'.uniqid();
+                $preparedVar = ':par_'.$this->getRandomParameter();
                 $this->preparedVars[ $preparedVar ] = $value;
                 $result = $preparedVar;
             }
@@ -185,5 +185,13 @@ class TFilter extends TExpression
             // concatenated the expression
             return "{$this->variable} {$this->operator} {$value}";
         }
+    }
+    
+    /**
+     * Returns a random parameter
+     */
+    private function getRandomParameter()
+    {
+        return mt_rand(1000000000, 1999999999);
     }
 }

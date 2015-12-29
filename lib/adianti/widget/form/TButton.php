@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Core\AdiantiCoreTranslator;
@@ -24,10 +24,10 @@ use Exception;
 class TButton extends TField implements AdiantiWidgetInterface
 {
     private $action;
-    private $label;
     private $image;
     private $properties;
     private $functions;
+    protected $label;
     protected $formName;
     
     /**

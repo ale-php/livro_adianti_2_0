@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Widget\Base\TElement;
@@ -156,7 +156,15 @@ class TEntry extends TField implements AdiantiWidgetInterface
         $this->tag-> name  = $this->name;    // TAG name
         $this->tag-> value = $this->value;   // TAG value
         $this->tag-> type  = 'text';         // input type
-        $this->setProperty('style', "width:{$this->size}px", FALSE); //aggregate style info
+        
+        if (strstr($this->size, '%') !== FALSE)
+        {
+            $this->setProperty('style', "width:{$this->size};", false); //aggregate style info
+        }
+        else
+        {
+            $this->setProperty('style', "width:{$this->size}px;", false); //aggregate style info
+        }
         
         if ($this->id)
         {
@@ -174,8 +182,7 @@ class TEntry extends TField implements AdiantiWidgetInterface
                 }
                 $string_action = $this->exitAction->serialize(FALSE);
 
-                $this->setProperty('exitaction', "serialform=(\$('#{$this->formName}').serialize());
-                                                 __adianti_ajax_lookup('$string_action&'+serialform, document.{$this->formName}.{$this->name})", FALSE);
+                $this->setProperty('exitaction', "__adianti_post_lookup('{$this->formName}', '{$string_action}', document.{$this->formName}.{$this->name})");
                 $this->setProperty('onBlur', $this->getProperty('exitaction'), FALSE);
             }
             

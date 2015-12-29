@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Util;
+namespace Adianti\Widget\Util;
 
 use Adianti\Control\TAction;
 use Adianti\Widget\Base\TElement;
@@ -26,7 +26,7 @@ class TDropDown extends TElement
      * @param $title Dropdown title
      * @param $icon  Dropdown icon
      */
-    public function __construct($title, $icon = NULL)
+    public function __construct($title, $icon = NULL, $use_caret = TRUE)
     {
         parent::__construct('div');
         $this->{'class'} = 'btn-group';
@@ -37,18 +37,21 @@ class TDropDown extends TElement
         $button->{'class'}       = 'btn btn-default btn-sm dropdown-toggle';
         $this->button = $button;
         
-        $span = new TElement('span');
-        $span->{'class'} = 'caret';
-        
         if ($icon)
         {
             $button->add(new TImage($icon));
         }
         $button->add($title);
-        $button->add($span);
+        if ($use_caret)
+        {
+            $span = new TElement('span');
+            $span->{'class'} = 'caret';
+            $button->add($span);
+        }
+        
         parent::add($button);
         
-        //$this->id = 'tdropdown_' . uniqid();
+        //$this->id = 'tdropdown_' . mt_rand(1000000000, 1999999999);
         $this->elements = new TElement('ul');
         $this->elements->{'class'} = 'dropdown-menu pull-left';
         $this->elements->{'aria-labelledby'} = 'drop2';
@@ -74,17 +77,41 @@ class TDropDown extends TElement
     }
     
     /**
+     * Define the button class
+     * @class CSS class
+     */
+    public function setButtonClass($class)
+    {
+        $this->button->{'class'} = $class;
+    }
+    
+    /**
+     * Returns the dropdown button
+     */
+    public function getButton()
+    {
+        return $this->button;
+    }
+    
+    /**
      * Add an action
      * @param $title  Title
-     * @param $action Action
+     * @param $action Action (TAction or string Javascript action)
      * @param $icon   Icon
      */
-    public function addAction($title, TAction $action, $icon = NULL)
+    public function addAction($title, $action, $icon = NULL)
     {
         $li = new TElement('li');
         $link = new TElement('a');
-        // if ($action instanceof TScriptAction) => don't __load_page... 
-        $link->{'onclick'} = "__adianti_load_page('{$action->serialize()}');";
+        
+        if ($action instanceof TAction)
+        { 
+            $link->{'onclick'} = "__adianti_load_page('{$action->serialize()}');";
+        }
+        else if (is_string($action))
+        {
+            $link->{'onclick'} = $action;
+        }
         $link->{'style'} = 'cursor: pointer';
         
         if ($icon)
@@ -100,6 +127,7 @@ class TDropDown extends TElement
         $li->add($link);
         
         $this->elements->add($li);
+        return $li;
     }
     
     /**

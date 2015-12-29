@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Control\TAction;
@@ -21,10 +21,10 @@ use Exception;
  */
 class TCombo extends TField implements AdiantiWidgetInterface
 {
-    private   $changeAction;
     protected $id;
     protected $items; // array containing the combobox options
     protected $formName;
+    private   $changeAction;
     private   $defaultOption;
 
     /**
@@ -35,7 +35,7 @@ class TCombo extends TField implements AdiantiWidgetInterface
     {
         // executes the parent class constructor
         parent::__construct($name);
-        $this->id   = 'tcombo_'.uniqid();
+        $this->id   = 'tcombo_'.mt_rand(1000000000, 1999999999);
         $this->defaultOption = '';
 
         // creates a <select> tag
@@ -53,6 +53,14 @@ class TCombo extends TField implements AdiantiWidgetInterface
         {
             $this->items = $items;
         }
+    }
+    
+    /**
+     * Return the combo items
+     */
+    public function getItems()
+    {
+        return $this->items;
     }
     
     /**
@@ -123,6 +131,7 @@ class TCombo extends TField implements AdiantiWidgetInterface
         {
             foreach ($items as $key => $value)
             {
+                $value = addslashes($value);
                 $code .= "tcombo_add_option('{$formname}', '{$name}', '{$key}', '{$value}'); ";
             }
         }
@@ -241,8 +250,7 @@ class TCombo extends TField implements AdiantiWidgetInterface
                 }
                 
                 $string_action = $this->changeAction->serialize(FALSE);
-                $this->setProperty('changeaction', "serialform=(\$('#{$this->formName}').serialize());
-                                              __adianti_ajax_lookup('$string_action&'+serialform, this)", FALSE);
+                $this->setProperty('changeaction', "__adianti_post_lookup('{$this->formName}', '{$string_action}', this)");
                 $this->setProperty('onChange', $this->getProperty('changeaction'));
             }
         }
@@ -251,8 +259,8 @@ class TCombo extends TField implements AdiantiWidgetInterface
             // make the widget read-only
             //$this->tag-> disabled   = "1"; // the value don't post
             $this->tag->{'onclick'} = "return false;";
-            $this->tag->{'style'}   = 'pointer-events:none';
-            $this->tag->{'class'} = 'tfield_disabled'; // CSS
+            $this->tag->{'style'}  .= ';pointer-events:none';
+            $this->tag->{'class'}   = 'tfield_disabled'; // CSS
         }
         // shows the combobox
         $this->tag->show();

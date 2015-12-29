@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Database;
+namespace Adianti\Database;
 
 use Adianti\Database\TSqlStatement;
 use Adianti\Database\TTransaction;
@@ -49,7 +49,7 @@ final class TSqlUpdate extends TSqlStatement
             {
                 if ($prepared)
                 {
-                    $preparedVar = ':par_'.uniqid();
+                    $preparedVar = ':par_'.self::getRandomParameter();
                     $this->preparedVars[ $preparedVar ] = $value;
                     $result = $preparedVar;
                 }
@@ -67,7 +67,7 @@ final class TSqlUpdate extends TSqlStatement
             {
                 if ($prepared)
                 {
-                    $preparedVar = ':par_'.uniqid();
+                    $preparedVar = ':par_'.self::getRandomParameter();
                     $this->preparedVars[ $preparedVar ] = $value;
                     $result = $preparedVar;
                 }

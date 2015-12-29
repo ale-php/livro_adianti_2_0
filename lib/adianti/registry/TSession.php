@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Registry;
+namespace Adianti\Registry;
 
 use Adianti\Registry\AdiantiRegistryInterface;
 
@@ -91,6 +91,14 @@ class TSession implements AdiantiRegistryInterface
         {
             unset($_SESSION[$var]);
         }
+    }
+    
+    /**
+     * Regenerate id
+     */
+    public static function regenerate()
+    {
+        session_regenerate_id();
     }
     
     /**

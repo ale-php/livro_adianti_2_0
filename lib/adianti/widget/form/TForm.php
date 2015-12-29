@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Widget\Base\TElement;
@@ -20,7 +20,7 @@ use ReflectionClass;
  * @copyright  Copyright (c) 2006-2014 Adianti Solutions Ltd. (http://www.adianti.com.br)
  * @license    http://www.adianti.com.br/framework-license
  */
-class TForm
+class TForm implements AdiantiFormInterface
 {
     protected $fields; // array containing the form fields
     protected $name;   // form name
@@ -35,8 +35,6 @@ class TForm
      */
     public function __construct($name = 'my_form')
     {
-        // register this form
-        self::$forms[$name] = $this;
         if ($name)
         {
             $this->setName($name);
@@ -87,6 +85,8 @@ class TForm
     public function setName($name)
     {
         $this->name = $name;
+        // register this form
+        self::$forms[$this->name] = $this;
     }
     
     /**
@@ -102,8 +102,9 @@ class TForm
      * @param $form_name  Form Name
      * @param $object     An Object containing the form data
      */
-    public static function sendData($form_name, $object, $aggregate = FALSE)
+    public static function sendData($form_name, $object, $aggregate = FALSE, $fireEvents = TRUE)
     {
+        $fire_param = $fireEvents ? 'true' : 'false';
         // iterate the object properties
         if ($object)
         {
@@ -122,8 +123,9 @@ class TForm
                         {
                             $data = addslashes($data);
                         }
+                        $data = str_replace(array("\n", "\r"), array( ' ', ' '), $data );
                         // send the property value to the form
-                        TScript::create( " tform_send_data('{$form_name}', '{$field}_{$property}', '$data'); " );
+                        TScript::create( " tform_send_data('{$form_name}', '{$field}_{$property}', '$data', $fire_param); " );
                     }
                 }
                 else
@@ -137,15 +139,18 @@ class TForm
                     {
                         $value = addslashes($value);
                     }
+                    
+                    $value = str_replace(array("\n", "\r"), array( ' ', ' '), $value );
+                    
                     // send the property value to the form
                     if ($aggregate)
                     {
-                        TScript::create( " tform_send_data_aggregate('{$form_name}', '{$field}', '$value'); " );
+                        TScript::create( " tform_send_data_aggregate('{$form_name}', '{$field}', '$value', $fire_param); " );
                     }
                     else
                     {
-                        TScript::create( " tform_send_data('{$form_name}', '{$field}', '$value'); " );
-                        TScript::create( " tform_send_data_by_id('{$form_name}', '{$field}', '$value'); " );
+                        TScript::create( " tform_send_data('{$form_name}', '{$field}', '$value', $fire_param); " );
+                        TScript::create( " tform_send_data_by_id('{$form_name}', '{$field}', '$value', $fire_param); " );
                     }
                 }
             }
@@ -176,7 +181,7 @@ class TForm
         if ($field instanceof TField)
         {
             $name = $field->getName();
-            if (isset($this->fields[$name]))
+            if (isset($this->fields[$name]) AND substr($name,-2) !== '[]')
             {
                 throw new Exception(AdiantiCoreTranslator::translate('You have already added a field called "^1" inside the form', $name));
             }
@@ -194,7 +199,7 @@ class TForm
         }
         if ($field instanceof TMultiField)
         {
-            $this->js_function .= "mtf{$name}.parseTableToJSON();";
+            $this->js_function .= "multifields['$name'].parseTableToJSON();";
             
             if ($this->fields)
             {

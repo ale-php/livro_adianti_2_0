@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Core\AdiantiCoreTranslator;
@@ -34,6 +34,7 @@ class TMultiField extends TField implements AdiantiWidgetInterface
     private $width;
     private $className;
     private $orientation;
+    protected $name;
     protected $formName;
     
     /**
@@ -265,7 +266,7 @@ class TMultiField extends TField implements AdiantiWidgetInterface
         {
             $table = new TTable;
             
-            $mandatory = array(); // mandatory
+            $mandatories = array(); // mandatory
             $fields = array();
             $i=0;
             
@@ -293,7 +294,7 @@ class TMultiField extends TField implements AdiantiWidgetInterface
                 $row_label->addCell($label);
                 $row_field->addCell($obj-> field);
                 
-                $mandatory[] = $obj->mandatory;
+                $mandatories[] = $obj->mandatory;
                 $fields[] = $name;
                 $post_fields[$name] = 1;
                 $sizes[$name] = $obj-> size;
@@ -304,7 +305,7 @@ class TMultiField extends TField implements AdiantiWidgetInterface
                     $aux_name = $obj-> field->getTextName();
                     $aux_full_name = $this->name.'_'.$aux_name;
                     
-                    $mandatory[] = 0;
+                    $mandatories[] = 0;
                     $obj-> field->setTextName($aux_full_name);
                     
                     $fields[] = $aux_name;
@@ -325,17 +326,16 @@ class TMultiField extends TField implements AdiantiWidgetInterface
             // create three buttons to control the MultiField
             $add = new TButton("{$this->name}btnStore");
             $add->setLabel(AdiantiCoreTranslator::translate('Register'));
-            //$add->setName("{$this->name}btnStore");
-            $add->setImage('ico_save.png');
-            $add->addFunction("mtf{$this->name}.addRowFromFormFields()");
+            $add->setImage('fa:angle-double-down');
+            $add->addFunction("multifields['{$this->name}'].addRowFromFormFields()");
             
             $del = new TButton("{$this->name}btnDelete");
             $del->setLabel(AdiantiCoreTranslator::translate('Delete'));
-            $del->setImage('ico_delete.png');
+            $del->setImage('fa:trash');
             
             $can = new TButton("{$this->name}btnCancel");
             $can->setLabel(AdiantiCoreTranslator::translate('Cancel'));
-            $can->setImage('ico_close.png');
+            $can->setImage('fa:times-circle');
             
             $hbox_buttons = new THBox;
             $hbox_buttons->{'style'} = 'margin-top:3px;margin-bottom:3px';
@@ -403,7 +403,7 @@ class TMultiField extends TField implements AdiantiWidgetInterface
                 {
                     foreach($fields as $name)
                     {
-                        $cellValue  = is_null($obj->$name) ? '' : $obj->$name;
+                        $cellValue = is_null($obj->$name) ? '' : $obj->$name;
                         $original = $cellValue;
                         if (is_array(json_decode($cellValue))) // se json
                         {
@@ -437,29 +437,9 @@ class TMultiField extends TField implements AdiantiWidgetInterface
         $wrapper->add($panel);
         $wrapper->show();
         
-        echo '<script type="text/javascript">';
-        echo "var mtf{$this->name};";
-        echo "mtf{$this->name} = new MultiField('{$this->name}mfTable',{$this->width},{$this->height});\n";
-        $s = implode("','",$fields);
-        echo "mtf{$this->name}.formFieldsAlias = Array('{$s}');\n";
-        $sfields = implode("','{$this->name}_",$fields);
-        echo "mtf{$this->name}.formFieldsName = Array('{$this->name}_{$sfields}');\n";
-        echo "mtf{$this->name}.formPostFields = Array();\n";
-        if ($post_fields)
-        {
-            foreach ($post_fields as $col =>$value)
-            {
-                echo "mtf{$this->name}.formPostFields['{$col}'] = '$value';\n";
-            }
-        }
-            
-        $mdr_array = implode(',', $mandatory);
-        echo "mtf{$this->name}.formFieldsMandatory = [{$mdr_array}];\n";
-        echo "mtf{$this->name}.mandatoryMessage = '".AdiantiCoreTranslator::translate('The field ^1 is required')."';\n";
-        echo "mtf{$this->name}.storeButton  = document.getElementsByName('{$this->name}btnStore')[0];\n";
-        echo "mtf{$this->name}.deleteButton = document.getElementsByName('{$this->name}btnDelete')[0];\n";
-        echo "mtf{$this->name}.cancelButton = document.getElementsByName('{$this->name}btnCancel')[0];\n";
-        echo "mtf{$this->name}.inputResult  = document.getElementsByName('{$this->name}')[0];\n";
-        echo '</script>';
+        $fields_json = json_encode($fields);
+        $mandatories_json = json_encode($mandatories);
+        
+        TScript::create(" tmultifield_start( '{$this->name}', $fields_json, $mandatories_json, {$this->width},{$this->height} ) ");
     }
 }

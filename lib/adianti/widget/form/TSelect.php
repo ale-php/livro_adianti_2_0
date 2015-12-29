@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Control\TAction;
@@ -23,11 +23,11 @@ use Exception;
  */
 class TSelect extends TField implements AdiantiWidgetInterface
 {
-    private   $changeAction;
     protected $id;
     protected $height;
     protected $items; // array containing the combobox options
     protected $formName;
+    private   $changeAction;
     private   $defaultOption;
     
     /**
@@ -38,7 +38,7 @@ class TSelect extends TField implements AdiantiWidgetInterface
     {
         // executes the parent class constructor
         parent::__construct($name);
-        $this->id   = 'tselect_'.uniqid();
+        $this->id   = 'tselect_' . mt_rand(1000000000, 1999999999);
         $this->defaultOption = '';
 
         // creates a <select> tag
@@ -129,6 +129,7 @@ class TSelect extends TField implements AdiantiWidgetInterface
      * @param $formname form name (used in gtk version)
      * @param $name field name
      * @param $items array with items
+     * @param $startEmpty ...
      */
     public static function reload($formname, $name, $items, $startEmpty = FALSE)
     {
@@ -254,9 +255,10 @@ class TSelect extends TField implements AdiantiWidgetInterface
                 {
                     throw new Exception(AdiantiCoreTranslator::translate('You must pass the ^1 (^2) as a parameter to ^3', __CLASS__, $this->name, 'TForm::setFields()') );
                 }
+                
                 $string_action = $this->changeAction->serialize(FALSE);
-                $this->setProperty('onChange', "serialform=(\$('#{$this->formName}').serialize());
-                                              __adianti_ajax_lookup('$string_action&'+serialform, this)");
+                $this->setProperty('changeaction', "__adianti_post_lookup('{$this->formName}', '{$string_action}', this)");
+                $this->setProperty('onChange', $this->getProperty('changeaction'));
             }
         }
         else
@@ -264,8 +266,8 @@ class TSelect extends TField implements AdiantiWidgetInterface
             // make the widget read-only
             //$this->tag-> disabled   = "1"; // the value don't post
             $this->tag->{'onclick'} = "return false;";
-            $this->tag->{'style'}   .= ';pointer-events:none';
-            $this->tag->{'class'} = 'tfield_disabled'; // CSS
+            $this->tag->{'style'}  .= ';pointer-events:none';
+            $this->tag->{'class'}   = 'tfield_disabled'; // CSS
         }
         // shows the combobox
         $this->tag->show();

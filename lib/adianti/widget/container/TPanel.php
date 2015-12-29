@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Container;
+namespace Adianti\Widget\Container;
 
 use Adianti\Widget\Base\TElement;
 use Adianti\Widget\Base\TStyle;
@@ -27,7 +27,7 @@ class TPanel extends TElement
      */
     public function __construct($width, $height)
     {
-        $this->{'id'} = 'tpanel_' . uniqid();
+        $this->{'id'} = 'tpanel_' . mt_rand(1000000000, 1999999999);
         
         // creates the panel style
         $this->style = new TStyle('style_'.$this->{'id'});

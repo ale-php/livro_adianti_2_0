@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Log;
+namespace Adianti\Log;
 
 use Adianti\Log\TLogger;
 

@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Widget\Base\TElement;
@@ -28,7 +28,7 @@ class TDate extends TEntry implements AdiantiWidgetInterface
     public function __construct($name)
     {
         parent::__construct($name);
-        $this->id   = 'tdate_'.uniqid();
+        $this->id   = 'tdate_' . mt_rand(1000000000, 1999999999);
         $this->mask = 'yyyy-mm-dd';
         
         $newmask = $this->mask;

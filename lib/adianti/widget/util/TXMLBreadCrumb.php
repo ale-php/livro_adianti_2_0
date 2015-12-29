@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Util;
+namespace Adianti\Widget\Util;
 
 use Adianti\Widget\Util\TBreadCrumb;
 use Adianti\Core\AdiantiCoreTranslator;

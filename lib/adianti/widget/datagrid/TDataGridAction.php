@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Datagrid;
+namespace Adianti\Widget\Datagrid;
 
 use Adianti\Control\TAction;
 
@@ -19,6 +19,8 @@ class TDataGridAction extends TAction
     private $label;
     private $field;
     private $displayCondition;
+    private $buttonClass;
+    private $useButton;
 
     /**
      * Define an icon for the action
@@ -74,6 +76,40 @@ class TDataGridAction extends TAction
     }
     
     /**
+     * define the buttonClass for the action
+     * @param $buttonClass A string containing the button css class
+     */
+    public function setButtonClass($buttonClass)
+    {
+        $this->buttonClass = $buttonClass;
+    }
+    
+    /**
+     * Returns the buttonClass
+     */
+    public function getButtonClass()
+    {
+        return $this->buttonClass;
+    }
+    
+    /**
+     * define if the action will use a regular button
+     * @param $useButton A boolean
+     */
+    public function setUseButton($useButton)
+    {
+        $this->useButton = $useButton;
+    }
+    
+    /**
+     * Returns if the action will use a regular button
+     */
+    public function getUseButton()
+    {
+        return $this->useButton;
+    }
+    
+    /**
      * Define a callback that must be valid to show the action
      * @param Callback $displayCondition Action display condition
      */
@@ -118,10 +154,10 @@ class TDataGridAction extends TAction
             {
                 $this->setParameter('order',      $_REQUEST['order'] );
             }
-            if (parent::isStatic())
-            {
-                $this->setParameter('static',     '1' );
-            }
+        }
+        if (parent::isStatic())
+        {
+            $this->setParameter('static',     '1' );
         }
         return parent::serialize($format_action);
     }

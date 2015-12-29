@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Menu;
+namespace Adianti\Widget\Menu;
 
 use Adianti\Widget\Menu\TMenu;
 use Adianti\Widget\Base\TElement;
@@ -21,6 +21,9 @@ class TMenuItem extends TElement
     private $action;
     private $image;
     private $menu;
+    private $level;
+    private $link;
+    private $linkClass;
     
     /**
      * Class constructor
@@ -28,15 +31,27 @@ class TMenuItem extends TElement
      * @param $action The menu action
      * @param $image  The menu image
      */
-    public function __construct($label, $action, $image = NULL)
+    public function __construct($label, $action, $image = NULL, $level = 0)
     {
         parent::__construct('li');
-        $this->label  = $label;
-        $this->action = $action;
+        $this->label     = $label;
+        $this->action    = $action;
+        $this->level     = $level;
+        $this->link      = new TElement('a');
+        $this->linkClass = 'dropdown-toggle';
+        
         if ($image)
         {
-            $this->image  = $image;
+            $this->image = $image;
         }
+    }
+    
+    /**
+     * Set link class
+     */
+    public function setLinkClass($class)
+    {
+        $this->linkClass = $class;
     }
     
     /**
@@ -45,6 +60,7 @@ class TMenuItem extends TElement
      */
     public function setMenu(TMenu $menu)
     {
+        $this->{'class'} = 'dropdown-submenu';
         $this->menu = $menu;
     }
     
@@ -53,8 +69,6 @@ class TMenuItem extends TElement
      */
     public function show()
     {
-        $link = new TElement('a');
-        
         if ($this->action)
         {
             //$url['class'] = $this->action;
@@ -62,33 +76,46 @@ class TMenuItem extends TElement
             $action = str_replace('#', '&', $this->action);
             if (substr($action,0,7) == 'http://')
             {
-                $link-> href = $action;
-                $link-> target = '_blank';
+                $this->link-> href = $action;
+                $this->link-> target = '_blank';
             }
             else
             {
-                $link-> href = "index.php?class={$action}";
-                $link-> generator = 'adianti';
+                $this->link-> href = "index.php?class={$action}";
+                $this->link-> generator = 'adianti';
             }
         }
         else
         {
-            $link-> href = '#';
+            $this->link-> href = '#';
         }
         
         if (isset($this->image))
         {
             $image = new TImage($this->image);
-            //$image-> style = 'margin-right: 8px';
-            $link->add($image);
+            $this->link->add($image);
         }
         
-        $link->add(' '.$this->label); // converts into ISO
-        $this->add($link);
+        $label = new TElement('span');
+        $label->add($this->label);
+        $this->link->add($label); // converts into ISO
+        $this->add($this->link);
         
         if ($this->menu instanceof TMenu)
         {
-            $this->{'class'} = 'dropdown-submenu';
+            $this->link->{'class'} = $this->linkClass;
+            if (strstr($this->linkClass, 'dropdown'))
+            {
+                $this->link->{'data-toggle'} = "dropdown";
+            }
+            
+            if ($this->level == 0)
+            {
+                $caret = new TElement('b');
+                $caret->{'class'} = 'caret';
+                $caret->add('');
+                $this->link->add($caret);
+            }
             parent::add($this->menu);
         }
         

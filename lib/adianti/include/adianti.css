@@ -28,7 +28,7 @@ table tr td
 
 .btn-group > .btn, .btn-group > .dropdown-menu, .btn-group > .popover
 {
-    font-size: 12px !important;
+    font-size: 12px;
 }
 
 .ui-widget
@@ -124,4 +124,29 @@ table tr td
 .light-grey
 {
     color: #bbb;
+}
+
+.blockUI h1 {
+    color: white !important;
+}
+
+.blockUI {
+    z-index: 4000 !important;
+}
+
+.datepicker { /* pq abre dentro de dialogs */
+    z-index: 1000000000000; /* mesmo zindex que tooltip */
+}
+
+.table-hover tbody tr:hover > td {
+    cursor: pointer
+}
+
+/* latin */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Open Sans'), local('OpenSans'), url(fonts/opensans/v13/cJZKeOuBrn4kERxqtaUH3ZBw1xU1rKptJj_0jans920.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
 }

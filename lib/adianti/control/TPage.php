@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Control;
+namespace Adianti\Control;
 
 use Adianti\Core\AdiantiCoreTranslator;
 use Adianti\Widget\Base\TElement;

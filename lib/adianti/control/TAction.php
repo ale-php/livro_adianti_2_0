@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Control;
+namespace Adianti\Control;
 
 use Adianti\Core\AdiantiCoreTranslator;
 use Exception;
@@ -156,8 +156,15 @@ class TAction
             $class  = is_string($this->action[0])? $this->action[0]: get_class($this->action[0]);
             $method = $this->action[1];
             
-            $rm = new ReflectionMethod( $class, $method );
-            return $rm-> isStatic ();
+            if (method_exists($class, $method))
+            {
+                $rm = new ReflectionMethod( $class, $method );
+                return $rm-> isStatic ();
+            }
+            else
+            {
+                return FALSE;
+            }
         }
         return FALSE;
     }

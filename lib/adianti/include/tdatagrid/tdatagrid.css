@@ -1,11 +1,11 @@
-.tdatagrid_table *
+table.tdatagrid_table *
 {
     -webkit-box-sizing: content-box !important;
     -moz-box-sizing: content-box !important;
     box-sizing: content-box !important;
 }
 
-.tdatagrid_table
+table.tdatagrid_table
 {
     border-collapse: separate;
     border-top: 1px solid #C7C7C7;
@@ -19,47 +19,35 @@
     -moz-border-radius: 3px;
     -webkit-border-radius: 3px;
     border-radius: 3px;
-    -moz-box-shadow: 2px 2px 2px #BFBFBF;
-    -webkit-box-shadow: 2px 2px 2px #BFBFBF;
-    box-shadow: 2px 2px 2px #BFBFBF;
+    -moz-box-shadow: 3px 3px 3px rgb(236, 236, 236);
+    -webkit-box-shadow: 3px 3px 3px rgb(236, 236, 236);
+    box-shadow: 3px 3px 3px rgb(236, 236, 236);
 }
 
-.tdatagrid_table a
+table.tdatagrid_table a
 {
     color: black;
 }
 
-.tdatagrid_head
+table.tdatagrid_table > thead.tdatagrid_head
 {
     background-color: #E8E8E8;
 }
 
-.tdatagrid_head tr td
+table.tdatagrid_table > thead.tdatagrid_head > tr > td,
+table.tdatagrid_table > thead.tdatagrid_head > tr > th
 {
-    height: 28px;
+    height: 30px;
 }
 
-.tdatagrid_body
-{
-}
 
-.tdatagrid_body tr td
-{
-    height: 26px;
-}
-
-.tdatagrid_cell.action
-{
-    padding: 2px;
-}
-
-.tdatagrid_col, .tdatagrid_action
+table.tdatagrid_table > thead.tdatagrid_head > tr > th.tdatagrid_col,
+table.tdatagrid_table > thead.tdatagrid_head > tr > th.tdatagrid_action
 {
     font-size: 10pt;
     border-left: 0px solid;
     border-top: 0px;
     padding-left: 1px;
-    padding-right: 1px;
     border-bottom: 1px solid gray;
     background-color: #E8E8E8;
     -webkit-box-shadow: inset 0 1px 0 #ffffff;
@@ -71,15 +59,16 @@
     text-shadow: 1px 1px 0px #fff;
     font-weight: bold;
     color: #2B2B2B;
+    border-right: 0px;
+    padding-right: 2px;
 }
 
-.tdatagrid_col:hover, .tdatagrid_action:hover
+table.tdatagrid_table > thead.tdatagrid_head > tr > th.tdatagrid_col[generator=adianti]:hover
 {
     cursor: pointer;
     background-color: #CFCFCF;
     border-left: 1px solid gray;
     border-right: 1px solid gray;
-    padding-left: 0px;
     padding-right: 0px;
     -moz-user-select: none;
     user-select: none;
@@ -87,25 +76,49 @@
     font-weight: bold;
 }
 
-.tdatagrid_action
+table.tdatagrid_table > tbody.tdatagrid_body
 {
-    border-right: 0px;
-    padding-right: 2px;
 }
 
-.tdatagrid_group
+table.tdatagrid_table > tbody.tdatagrid_body > tr > td
+{
+    height: 26px;
+}
+
+table.tdatagrid_table > tbody.tdatagrid_body > tr.tdatagrid_group
 {
     background-color: #8D8BC8;
     color: white;
     text-shadow: none;
 }
 
-.tdatagrid_group td
+table.tdatagrid_table > tbody.tdatagrid_body > tr.tdatagrid_group > td
 {
     padding-left: 5px;
+    border-bottom: 1px solid white;
 }
 
-.tdatagrid_cell
+table.tdatagrid_table > tbody.tdatagrid_body > tr.tdatagrid_row_even
+{
+    background-color: #f6f6f6;
+    height: 19px;
+}
+
+table.tdatagrid_table > tbody.tdatagrid_body > tr.tdatagrid_row_odd
+{
+    background-color: #fafafa;
+    height: 19px;
+}
+
+table.tdatagrid_table > tbody.tdatagrid_body > tr.tdatagrid_row_even:hover,
+table.tdatagrid_table > tbody.tdatagrid_body > tr.tdatagrid_row_odd:hover
+{
+    background-color: #D7D7D7;
+    height: 19px;
+    cursor: pointer;
+}
+
+table.tdatagrid_table > tbody.tdatagrid_body > tr > td.tdatagrid_cell
 {
     border-top: 1px solid #ffffff;
     border-bottom: 1px solid #e0e0e0;
@@ -114,43 +127,37 @@
     padding-right: 5px;
 }
 
-.tdatagrid_row_even
+table.tdatagrid_table > tbody.tdatagrid_body > tr > td.tdatagrid_cell.action
 {
-    background-color: #f6f6f6;
-    height: 19px;
+    vertical-align: middle;
 }
 
-.tdatagrid_row_odd
+table.dataTable.dtr-inline.collapsed > tbody > tr > td:first-child:before, table.dataTable.dtr-inline.collapsed > tbody > tr > th:first-child:before
 {
-    background-color: #fafafa;
-    height: 19px;
+    text-shadow: none;
+    top: inherit !important;
 }
 
-.tdatagrid_row_even:hover, .tdatagrid_row_odd:hover
-{
-    background-color: #D7D7D7;
-    height: 19px;
-    cursor: pointer;
-}
-
-.tdatagrid_table tr:first-child td
+table.tdatagrid_table tr:first-child td
 {
     border-top: 0;
 }
 
-.tdatagrid_table tr td:first-child,
-.tdatagrid_table tr.tdatagrid_head td:first-child
+table.tdatagrid_table tr td:first-child,
+table.tdatagrid_table tr.tdatagrid_head td:first-child,
+table.tdatagrid_table tr.tdatagrid_head th:first-child
 {
     border-left: 0;
 }
 
-.tdatagrid_table tr td:last-child,
-.tdatagrid_table tr.tdatagrid_head td:last-child
+table.tdatagrid_table tr td:last-child,
+table.tdatagrid_table tr.tdatagrid_head td:last-child,
+table.tdatagrid_table tr.tdatagrid_head th:last-child
 {
     border-right: 0;
 }
 
-.tdatagrid_body tr td input
+table.tdatagrid_body tr td input
 {
     height: 24px;
     margin: 0;

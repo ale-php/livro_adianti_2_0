@@ -1,11 +1,15 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Widget\Base\TElement;
 use Adianti\Widget\Base\TScript;
 use Adianti\Widget\Form\TField;
-use Adianti\Widget\Form\TImage;
+use Adianti\Widget\Util\TImage;
+use Adianti\Core\AdiantiCoreTranslator;
+use Adianti\Control\TAction;
+
+use Exception;
 
 /**
  * A Sortable list
@@ -24,6 +28,7 @@ class TSortList extends TField implements AdiantiWidgetInterface
     private $valueSet;
     private $connectedTo;
     private $itemIcon;
+    private $changeAction;
     protected $id;
     
     /**
@@ -34,7 +39,7 @@ class TSortList extends TField implements AdiantiWidgetInterface
     {
         // executes the parent class constructor
         parent::__construct($name);
-        $this->id   = 'tsortlist_'.uniqid();
+        $this->id   = 'tsortlist_'.mt_rand(1000000000, 1999999999);
         
         $this->initialItems = array();
         $this->items = array();
@@ -139,6 +144,23 @@ class TSortList extends TField implements AdiantiWidgetInterface
     }
     
     /**
+     * Define the action to be executed when the user changes the combo
+     * @param $action TAction object
+     */
+    public function setChangeAction(TAction $action)
+    {
+        if ($action->isStatic())
+        {
+            $this->changeAction = $action;
+        }
+        else
+        {
+            $string_action = $action->toString();
+            throw new Exception(AdiantiCoreTranslator::translate('Action (^1) must be static to be used in ^2', $string_action, __METHOD__));
+        }
+    }
+    
+    /**
      * Enable the field
      */
     public static function enableField($form_name, $field)
@@ -216,6 +238,17 @@ class TSortList extends TField implements AdiantiWidgetInterface
         
         if (parent::getEditable())
         {
+            $change_action = 'function() {}';
+            if (isset($this->changeAction))
+            {
+                if (!TForm::getFormByName($this->formName) instanceof TForm)
+                {
+                    throw new Exception(AdiantiCoreTranslator::translate('You must pass the ^1 (^2) as a parameter to ^3', __CLASS__, $this->name, 'TForm::setFields()') );
+                }            
+                $string_action = $this->changeAction->serialize(FALSE);
+                $change_action = "function() { __adianti_post_lookup('{$this->formName}', '{$string_action}', this); }";
+            }
+            
             $connect = 'false';
             if ($this->connectedTo AND is_array($this->connectedTo))
             {
@@ -225,7 +258,7 @@ class TSortList extends TField implements AdiantiWidgetInterface
                 }
                 $connect = implode(', ', $connectIds);
             }
-            TScript::create(" tsortlist_start( '#{$this->id}', '{$connect}' ) ");
+            TScript::create(" tsortlist_start( '#{$this->id}', '{$connect}', $change_action ) ");
         }
         $this->tag->show();
     }

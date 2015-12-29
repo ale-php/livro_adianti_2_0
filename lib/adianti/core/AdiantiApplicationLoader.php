@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Core;
+namespace Adianti\Core;
 
 use Adianti\Widget\Dialog\TMessage;
 

@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Registry;
+namespace Adianti\Registry;
 
 /**
  * Registry interface

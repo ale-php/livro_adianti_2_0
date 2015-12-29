@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Core\AdiantiCoreTranslator;
@@ -167,6 +167,7 @@ class TRadioGroup extends TField implements AdiantiWidgetInterface
             foreach ($this->items as $index => $label)
             {
                 $button = $this->buttons[$index];
+                $button->setName($this->name);
                 
                 // check if contains any value
                 if ($this->value == $index)
@@ -194,8 +195,7 @@ class TRadioGroup extends TField implements AdiantiWidgetInterface
                             throw new Exception(AdiantiCoreTranslator::translate('You must pass the ^1 (^2) as a parameter to ^3', __CLASS__, $this->name, 'TForm::setFields()') );
                         }
                         $string_action = $this->changeAction->serialize(FALSE);
-                        $button->setProperty('onChange', "serialform=(\$('#{$this->formName}').serialize());
-                                                          __adianti_ajax_lookup('$string_action&'+serialform, this)");
+                        $button->setProperty('onChange', "__adianti_post_lookup('{$this->formName}', '{$string_action}', this)");
                     }
                 }
                 else

@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Core;
+namespace Adianti\Core;
 
 use ReflectionMethod;
 use Exception;
@@ -26,6 +26,7 @@ class AdiantiCoreApplication
         $class   = isset($_REQUEST['class'])    ? $_REQUEST['class']   : '';
         $static  = isset($_REQUEST['static'])   ? $_REQUEST['static']  : '';
         $method  = isset($_REQUEST['method'])   ? $_REQUEST['method']  : '';
+        
         $content = '';
         set_error_handler(array('AdiantiCoreApplication', 'errorHandler'));
         
@@ -36,11 +37,11 @@ class AdiantiCoreApplication
                 $rf = new ReflectionMethod($class, $method);
                 if ($rf-> isStatic ())
                 {
-                    call_user_func(array($class, $method),$_REQUEST);
+                    call_user_func(array($class, $method), $_REQUEST);
                 }
                 else
                 {
-                    call_user_func(array(new $class($_GET), $method),$_REQUEST);
+                    call_user_func(array(new $class($_GET), $method), $_REQUEST);
                 }
             }
             else
@@ -175,8 +176,8 @@ class AdiantiCoreApplication
         if ( $errno === E_RECOVERABLE_ERROR )
         {
             throw new ErrorException($errstr, $errno, 0, $errfile, $errline);
-        	}
-     
-        	return false;
+    	}
+ 
+    	return false;
     }
 }

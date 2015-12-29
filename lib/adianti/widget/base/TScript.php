@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Base;
+namespace Adianti\Widget\Base;
 
 use Adianti\Widget\Base\TElement;
 

@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Validator;
+namespace Adianti\Validator;
 
 use Adianti\Validator\TFieldValidator;
 use Adianti\Core\AdiantiCoreTranslator;

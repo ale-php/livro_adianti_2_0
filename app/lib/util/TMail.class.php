@@ -15,7 +15,7 @@ class TMail
      */
     function __construct()
     {
-        $this->pm = new PHPMailer;
+        $this->pm = new PHPMailer(true);
         $this->pm-> CharSet = 'utf-8';
     }
     
@@ -180,10 +180,7 @@ class TMail
      */
     public function send()
     {
-        if (!$this->pm-> Send())
-        {
-            throw new Exception(TAdiantiCoreTranslator::translate('E-mail not sent'));
-        }
+        $this->pm-> Send();
         return TRUE;
     }
 }

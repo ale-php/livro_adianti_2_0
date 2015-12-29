@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Validator;
+namespace Adianti\Validator;
 
 /**
  * TFieldValidator abstract validation class

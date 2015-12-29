@@ -1,9 +1,12 @@
 <?php
-Namespace Adianti\Widget\Util;
+namespace Adianti\Widget\Util;
 
 use Adianti\Widget\Container\TTable;
 use Adianti\Widget\Container\TScroll;
 use Adianti\Widget\Dialog\TMessage;
+use Adianti\Core\AdiantiCoreTranslator;
+
+use Exception;
 
 /**
  * Exception visualizer
@@ -20,12 +23,12 @@ class TExceptionView
     /**
      * Constructor method
      */
-    function __construct($e)
+    function __construct(Exception $e)
     {
         $error_array = $e->getTrace();
         $table = new TTable;
         $row=$table->addRow();
-        $row->addCell('<b>Error: ' . $e->getMessage(). '</b><br>');
+        $row->addCell('<b>' . $e->getMessage(). '</b><br>');
         $row=$table->addRow();
         $row->addCell('&nbsp;');
         
@@ -89,6 +92,6 @@ class TExceptionView
         $table->show();
         $content = ob_get_clean();
         
-        new TMessage('error', $content);
+        new TMessage('error', $content, NULL, AdiantiCoreTranslator::translate('Exception'));
     }
 }

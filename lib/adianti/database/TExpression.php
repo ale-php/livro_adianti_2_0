@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Database;
+namespace Adianti\Database;
 
 /**
  * Base class for TCriteria and TFilter (composite pattern implementation)

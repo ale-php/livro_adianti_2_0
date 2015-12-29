@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Container;
+namespace Adianti\Widget\Container;
 
 use Adianti\Widget\Base\TElement;
 use Adianti\Widget\Base\TScript;
@@ -41,7 +41,7 @@ class TJQueryDialog extends TElement
         $this->draggable = 'true';
         $this->resizable = 'true';
         $this->stackOrder = 2000;
-        $this->{'id'} = 'jquery_dialog_'.uniqid();
+        $this->{'id'} = 'jquery_dialog_'.mt_rand(1000000000, 1999999999);
         $this->{'style'}="overflow:auto";
     }
     
@@ -188,7 +188,10 @@ class TJQueryDialog extends TElement
      */
     public static function closeAll()
     {
-        // it has to be inline (not external function call)
-        TScript::create( ' $(\'[widget="TWindow"]\').remove() ' );
+        if (!isset($_REQUEST['ajax_lookup']) OR $_REQUEST['ajax_lookup'] !== '1')
+        {
+            // it has to be inline (not external function call)
+            TScript::create( ' $(\'[widget="TWindow"]\').remove(); ' );
+        }
     }
 }

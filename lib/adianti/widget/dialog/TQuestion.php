@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Dialog;
+namespace Adianti\Widget\Dialog;
 
 use Adianti\Core\AdiantiCoreTranslator;
 use Adianti\Control\TAction;
@@ -30,7 +30,7 @@ class TQuestion
      */
     public function __construct($message, TAction $action_yes = NULL, TAction $action_no = NULL, $title_msg = '')
     {
-        $this->id = uniqid();
+        $this->id = 'tquestion_'.mt_rand(1000000000, 1999999999);
         
         $modal_wrapper = new TElement('div');
         $modal_wrapper->{'class'} = 'modal';
@@ -47,8 +47,8 @@ class TQuestion
         $modal_header = new TElement('div');
         $modal_header->{'class'} = 'modal-header';
         
-        $image = new TImage("lib/adianti/images/question.png");
-        $image->{'style'} = 'float:left';
+        $image = new TImage("fa:fa fa-question-circle fa-5x blue");
+        $image->{'style'} = 'float:left; margin-right: 10px;';
         
         $close = new TElement('button');
         $close->{'type'} = 'button';
@@ -64,10 +64,10 @@ class TQuestion
         
         $body = new TElement('div');
         $body->{'class'} = 'modal-body';
+        $body->{'style'} = 'text-align:left';
         $body->add($image);
         
         $span = new TElement('span');
-        $span->{'style'} = 'margin-left:20px;float:left; display:inline-block';
         $span->add($message);
         $body->add($span);
         

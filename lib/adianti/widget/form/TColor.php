@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Widget\Base\TElement;
@@ -28,7 +28,7 @@ class TColor extends TEntry implements AdiantiWidgetInterface
     public function __construct($name)
     {
         parent::__construct($name);
-        $this->id = 'tcolor_'.uniqid();
+        $this->id = 'tcolor_'.mt_rand(1000000000, 1999999999);
     }
     
     /**

@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Base;
+namespace Adianti\Widget\Base;
 
 /**
  * Base class for all HTML Elements
@@ -13,40 +13,64 @@ Namespace Adianti\Widget\Base;
  */
 class TElement
 {
-    private $name;        // tag name
+    private $tagname;     // tag name
     private $properties;  // tag properties
     private $wrapped;
     private $useLineBreaks;
     private $useSingleQuotes;
     protected $children;
+    private $voidelements;
     
     /**
      * Class Constructor
-     * @param $name  tag name
+     * @param $tagname  tag name
      */
-    public function __construct($name)
+    public function __construct($tagname)
     {
         // define the element name
-        $this->name = $name;
+        $this->tagname = $tagname;
         $this->useLineBreaks = TRUE;
         $this->useSingleQuotes = FALSE;
         $this->wrapped = FALSE;
+        $this->voidelements = array('area', 'base', 'br', 'col', 'command', 'embed', 'hr',
+                                    'img', 'input', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr');
+    }
+    
+    /**
+     * Create an element
+     * @param $tagname Element name
+     * @param $value Element value
+     * @param $attributes Element attributes
+     */
+    public static function tag($tagname, $value, $attributes = NULL)
+    {
+        $object = new TElement($tagname);
+        $object->add($value);
+        if ($attributes)
+        {
+            foreach ($attributes as $att_name => $att_value)
+            {
+                $object->$att_name = $att_value;
+            }
+        }
+        
+        return $object;
     }
     
     /**
      * Change the element name
-     * @param $name Element name
+     * @param $tagname Element name
      */
-    public function setName($name)
+    public function setName($tagname)
     {
-        $this->name = $name;
+        $this->tagname = $tagname;
     }
     
     /**
      * Define if the element is wrapped inside another one
      * @param @bool Boolean TRUE if is wrapped
      */
-    private function setIsWrapped($bool)
+    protected function setIsWrapped($bool)
     {
         $this->wrapped = $bool;
     }
@@ -203,7 +227,7 @@ class TElement
     private function open()
     {
         // exibe a tag de abertura
-        echo "<{$this->name}";
+        echo "<{$this->tagname}";
         if ($this->properties)
         {
             // percorre as propriedades
@@ -220,7 +244,7 @@ class TElement
             }
         }
         
-        if (count($this->children) == 0)
+        if (in_array($this->tagname, $this->voidelements))
         {
             echo '/>';
         }
@@ -262,6 +286,10 @@ class TElement
                     echo $child;
                 }
             }
+        }
+        
+        if (!in_array($this->tagname, $this->voidelements))
+        {
             // closes the tag
             $this->close();
         }
@@ -272,7 +300,7 @@ class TElement
      */
     private function close()
     {
-        echo "</{$this->name}>";
+        echo "</{$this->tagname}>";
         if ($this->useLineBreaks)
         {
             echo "\n";

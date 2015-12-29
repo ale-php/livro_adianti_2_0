@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Widget\Base\TElement;
@@ -29,7 +29,7 @@ class TLabel extends TField implements AdiantiWidgetInterface
      */
     public function __construct($value)
     {
-        $this->id = uniqid();
+        $this->id = mt_rand(1000000000, 1999999999);
         $stylename = 'tlabel_'.$this->id;
         
         // set the label's content

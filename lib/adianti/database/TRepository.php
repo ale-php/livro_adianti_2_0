@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Database;
+namespace Adianti\Database;
 
 use Adianti\Core\AdiantiCoreTranslator;
 use Adianti\Database\TRecord;
@@ -65,10 +65,67 @@ final class TRepository
      * @param  $operator = comparison operator (>,<,=)
      * @param  $value    = value to be compared
      * @param  $logicOperator = logical operator (TExpression::AND_OPERATOR, TExpression::OR_OPERATOR)
+     * @return A TRepository object
      */
     public function where($variable, $operator, $value, $logicOperator = TExpression::AND_OPERATOR)
     {
         $this->criteria->add(new TFilter($variable, $operator, $value), $logicOperator);
+        
+        return $this;
+    }
+    
+    /**
+     * Add a run time OR criteria using fluent interfaces
+     * 
+     * @param  $variable = variable
+     * @param  $operator = comparison operator (>,<,=)
+     * @param  $value    = value to be compared
+     * @return A TRepository object
+     */
+    public function orWhere($variable, $operator, $value)
+    {
+        $this->criteria->add(new TFilter($variable, $operator, $value), TExpression::OR_OPERATOR);
+        
+        return $this;
+    }
+    
+    /**
+     * Define the ordering for criteria using fluent interfaces
+     * 
+     * @param  $order = Order column
+     * @param  $direction = Order direction (asc, desc)
+     * @return A TRepository object
+     */
+    public function orderBy($order, $direction = 'asc')
+    {
+        $this->criteria->setProperty('order', $order);
+        $this->criteria->setProperty('direction', $direction);
+        
+        return $this;
+    }
+    
+    /**
+     * Define the LIMIT criteria using fluent interfaces
+     * 
+     * @param  $limit = Limit
+     * @return A TRepository object
+     */
+    public function take($limit)
+    {
+        $this->criteria->setProperty('limit', $limit);
+        
+        return $this;
+    }
+    
+    /**
+     * Define the OFFSET criteria using fluent interfaces
+     * 
+     * @param  $offset = Offset
+     * @return A TRepository object
+     */
+    public function skip($offset)
+    {
+        $this->criteria->setProperty('offset', $offset);
         
         return $this;
     }
@@ -119,28 +176,35 @@ final class TRepository
             if ($result)
             {
                 // iterate the results as objects
-                while ($row = $result->fetchObject($this->class))
+                while ($raw = $result-> fetchObject())
                 {
+                    $object = new $this->class;
+                    if (method_exists($object, 'onAfterLoadCollection'))
+                    {
+                        $object->onAfterLoadCollection($raw);
+                    }
+                    $object->fromArray( (array) $raw);
+                    
                     if ($callObjectLoad)
                     {
                         // reload the object because its load() method may be overloaded
                         if ($rm->getDeclaringClass()-> getName () !== 'Adianti\Database\TRecord')
                         {
-                            $row->reload();
+                            $object->reload();
                         }
-                        
-                        if ( $cache = $row->getCacheControl() )
+                    }
+                    
+                    if ( $cache = $object->getCacheControl() )
+                    {
+                        $pk = $object->getPrimaryKey();
+                        $record_key = $class . '['. $object->$pk . ']';
+                        if ($cache::setValue( $record_key, $object->toArray() ))
                         {
-                            $pk = $row->getPrimaryKey();
-                            $record_key = $class . '['. $row->$pk . ']';
-                            if ($cache::setValue( $record_key, $row->toArray() ))
-                            {
-                                TTransaction::log($record_key . ' stored in cache');
-                            }
+                            TTransaction::log($record_key . ' stored in cache');
                         }
                     }
                     // store the object in the $results array
-                    $results[] = $row;
+                    $results[] = $object;
                 }
             }
             return $results;
@@ -196,7 +260,7 @@ final class TRepository
                 if ($result)
                 {
                     // iterate the results as objects
-                    while ($row = $result->fetchObject())
+                    while ($row = $result-> fetchObject())
                     {
                         $record_key = $class . '['. $row->$pk . ']';
                         if ($cache::delValue( $record_key ))
@@ -284,5 +348,10 @@ final class TRepository
             // if there's no active transaction opened
             throw new Exception(AdiantiCoreTranslator::translate('No active transactions') . ': ' . __METHOD__ .' '. $this->getEntity());
         }
+    }
+    
+    public function get(TCriteria $criteria = NULL, $callObjectLoad = TRUE)
+    {
+        return $this->load($criteria, $callObjectLoad);
     }
 }

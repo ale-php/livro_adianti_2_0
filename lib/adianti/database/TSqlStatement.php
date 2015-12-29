@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Database;
+namespace Adianti\Database;
 
 use Adianti\Database\TCriteria;
 
@@ -42,6 +42,14 @@ abstract class TSqlStatement
     public function setCriteria(TCriteria $criteria)
     {
         $this->criteria = $criteria;
+    }
+    
+    /**
+     * Returns a random parameter
+     */
+    protected function getRandomParameter()
+    {
+        return mt_rand(1000000000, 1999999999);
     }
     
     // force method rewrite in child classes

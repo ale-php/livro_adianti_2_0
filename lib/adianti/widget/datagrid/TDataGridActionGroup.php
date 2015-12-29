@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Datagrid;
+namespace Adianti\Widget\Datagrid;
 
 use Adianti\Control\TAction;
 

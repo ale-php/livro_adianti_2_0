@@ -7,43 +7,41 @@
     {HEAD}
 </head>
 <body>
-<nav class="navbar navbar-inverse">
-    <div class="container-fluid">
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="#">Agenda Eletronica</a>
+    <div class="adianti_container">
+        <div class="header">
+            <div class="thin_bar">
+                &nbsp;
+            </div>
+            <div class="header_content">
+                <div class="logo1" style="position:relative; width:48%; padding-top:14px">
+                    <a target="newwindow" href="http://www.adianti.com.br/framework">
+                        <img src="app/templates/theme1/images/framework.png">
+                    </a>
+                </div>
+                
+                <div class="logo2" style="position:relative; width:48%">
+                    <a target="newwindow" href="http://www.adianti.com.br">
+                        <img src="app/templates/theme1/images/adianti.png">
+                    </a>
+                </div>
+            </div>
+            <div class="header_bottom" style="clear:both"></div>
         </div>
-
-
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
-                <li><a href="index.php?class=Home">Clientes</a></li>
-
-
-
-            </ul>
-        </div><!-- /.navbar-collapse -->
-    </div><!-- /.container-fluid -->
-</nav>
-
-<div class="col-sm-7 col-sm-offset-3">
-
+        
+        <div class="body">
+            <div id="menuDiv">
+                <div class="tutor-navbar">
+                  <div class="tutor-navbar-inner">
+                    {MENU}
+                  </div>
+                </div>
+            </div>
             <div id="adianti_div_content" class="content"></div>
             <div id="adianti_online_content"></div>
             <div id="adianti_online_content2"></div>
             <div id="pageboth"><br></div>
-
-</div>
-
-    <script type="text/javascript" id="adianti_placeholder">
-    //#javascript_placeholder#
-    </script>
+        </div>
+        <div style="clear:both;"></div>
+    </div>
 </body>
 </html>

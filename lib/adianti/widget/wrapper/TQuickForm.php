@@ -1,7 +1,8 @@
 <?php
-Namespace Adianti\Widget\Wrapper;
+namespace Adianti\Widget\Wrapper;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
+use Adianti\Core\AdiantiCoreTranslator;
 use Adianti\Control\TAction;
 use Adianti\Widget\Form\TForm;
 use Adianti\Widget\Form\TLabel;
@@ -11,6 +12,8 @@ use Adianti\Widget\Container\TTable;
 use Adianti\Widget\Container\THBox;
 use Adianti\Validator\TFieldValidator;
 use Adianti\Validator\TRequiredValidator;
+
+use Exception;
 
 /**
  * Create quick forms for input data with a standard container for elements
@@ -27,10 +30,15 @@ class TQuickForm extends TForm
     protected $fields; // array containing the form fields
     protected $name;   // form name
     protected $actionButtons;
+    private   $currentRow;
     private   $table;
-    private   $actions_container;
-    private   $has_action;
-    
+    private   $actionsContainer;
+    private   $hasAction;
+    private   $fieldsByRow;
+    private   $titleCell;
+    private   $actionCell;
+    private   $fieldPositions;
+     
     /**
      * Class Constructor
      * @param $name Form Name
@@ -41,7 +49,9 @@ class TQuickForm extends TForm
         
         // creates a table
         $this->table = new TTable;
-        $this->has_action = FALSE;
+        $this->hasAction = FALSE;
+        
+        $this->fieldsByRow = 1;
         
         // add the table to the form
         parent::add($this->table);
@@ -53,6 +63,38 @@ class TQuickForm extends TForm
     public function getTable()
     {
         return $this->table;
+    }
+    
+    /**
+     * Define the field quantity per row
+     * @param $count Field count
+     */
+    public function setFieldsByRow($count)
+    {
+        if (is_int($count) AND $count >=1 AND $count <=3)
+        {
+            $this->fieldsByRow = $count;
+            if (!empty($this->titleCell))
+            {
+                $this->titleCell->{'colspan'}  = 2 * $this->fieldsByRow;
+            }
+            if (!empty($this->actionCell))
+            {
+                $this->actionCell->{'colspan'} = 2 * $this->fieldsByRow;
+            }
+        }
+        else
+        {
+            throw new Exception(AdiantiCoreTranslator::translate('The method (^1) just accept values of type ^2 between ^3 and ^4', __METHOD__, 'integer', 1, 3));
+        }
+    }
+    
+    /**
+     * Return the fields by row count
+     */
+    public function getFieldsByRow()
+    {
+        return $this->fieldsByRow;
     }
     
     /**
@@ -91,8 +133,8 @@ class TQuickForm extends TForm
         $row = $this->table->addRow();
         $row->{'class'} = 'tformtitle';
         $this->table->{'width'} = '100%';
-        $cell = $row->addCell( new TLabel($title) );
-        $cell->{'colspan'} = 2;
+        $this->titleCell = $row->addCell( new TLabel($title) );
+        $this->titleCell->{'colspan'} = 2 * $this->fieldsByRow;
     }
     
     /**
@@ -106,9 +148,14 @@ class TQuickForm extends TForm
     {
         $object->setSize($size, $size);
         parent::addField($object);
+        $object->setLabel($label);
         
-        // add the field to the container
-        $row = $this->table->addRow();
+        if ( empty($this->currentRow) OR ( $this->fieldPositions % $this->fieldsByRow ) == 0 )
+        {
+            // add the field to the container
+            $this->currentRow = $this->table->addRow();
+        }
+        $row = $this->currentRow;
         
         if ($validator instanceof TRequiredValidator)
         {
@@ -134,6 +181,7 @@ class TQuickForm extends TForm
             $object->addValidation($label, $validator);
         }
         
+        $this->fieldPositions ++;
         return $row;
     }
     
@@ -145,8 +193,12 @@ class TQuickForm extends TForm
      */
     public function addQuickFields($label, $objects, $required = FALSE)
     {
-        // add the field to the container
-        $row = $this->table->addRow();
+        if ( empty($this->currentRow) OR ( $this->fieldPositions % $this->fieldsByRow ) == 0 )
+        {
+            // add the field to the container
+            $this->currentRow = $this->table->addRow();
+        }
+        $row = $this->currentRow;
         
         if ($required)
         {
@@ -164,10 +216,12 @@ class TQuickForm extends TForm
         foreach ($objects as $object)
         {
             parent::addField($object);
+            $object->setLabel($label);
             $hbox->add($object);
         }
         $row->addCell( $hbox );
         
+        $this->fieldPositions ++;
         return $row;
     }
     
@@ -187,20 +241,20 @@ class TQuickForm extends TForm
         $button->setAction($action, $label);
         $button->setImage($icon);
         
-        if (!$this->has_action)
+        if (!$this->hasAction)
         {
-            $this->actions_container = new THBox;
+            $this->actionsContainer = new THBox;
             
             $row  = $this->table->addRow();
             $row->{'class'} = 'tformaction';
-            $cell = $row->addCell( $this->actions_container );
-            $cell->colspan = 2;
+            $this->actionCell = $row->addCell( $this->actionsContainer );
+            $this->actionCell->{'colspan'} = 2 * $this->fieldsByRow;
         }
         
         // add cell for button
-        $this->actions_container->add($button);
+        $this->actionsContainer->add($button);
         
-        $this->has_action = TRUE;
+        $this->hasAction = TRUE;
         $this->actionButtons[] = $button;
         
         return $button;
@@ -211,9 +265,14 @@ class TQuickForm extends TForm
      */
     public function delActions()
     {
-        if ($this->actions_container)
+        if ($this->actionsContainer)
         {
-            $this->actions_container->clearChildren();
+            foreach ($this->actionButtons as $key => $button)
+            {
+                parent::delField($button);
+                unset($this->actionButtons[$key]);
+            }
+            $this->actionsContainer->clearChildren();
         }
     }
     
@@ -223,6 +282,16 @@ class TQuickForm extends TForm
     public function getActionButtons()
     {
         return $this->actionButtons;
+    }
+    
+    /**
+     * Detach action buttons
+     */
+    public function detachActionButtons()
+    {
+        $buttons = $this->getActionButtons();
+        $this->delActions();
+        return $buttons;
     }
     
     /**

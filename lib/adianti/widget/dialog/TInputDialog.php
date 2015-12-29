@@ -1,10 +1,10 @@
 <?php
-Namespace Adianti\Widget\Dialog;
+namespace Adianti\Widget\Dialog;
 
 use Adianti\Widget\Base\TScript;
 use Adianti\Core\AdiantiCoreTranslator;
 use Adianti\Control\TAction;
-use Adianti\Widget\Form\TForm;
+use Adianti\Widget\Form\AdiantiFormInterface;
 use Adianti\Widget\Form\TButton;
 use Adianti\Widget\Base\TElement;
 use Adianti\Widget\Wrapper\TQuickForm;
@@ -33,14 +33,14 @@ class TInputDialog
      * @param $action  Action to be processed when closing the dialog
      * @param $caption Button caption
      */
-    public function __construct($title_msg, TForm $form, TAction $action = NULL, $caption = '')
+    public function __construct($title_msg, AdiantiFormInterface $form, TAction $action = NULL, $caption = '')
     {
-        $this->id = uniqid();
+        $this->id = 'tinputdialog_'.mt_rand(1000000000, 1999999999);
         
         $modal_wrapper = new TElement('div');
         $modal_wrapper->{'class'} = 'modal';
         $modal_wrapper->{'id'}    = $this->id;
-        $modal_wrapper->{'style'} = 'padding-top: 10%; z-index:4000';
+        $modal_wrapper->{'style'} = 'padding-top: 10%; z-index:2000';
         $modal_wrapper->{'tabindex'} = '-1';
         
         $modal_dialog = new TElement('div');
@@ -69,16 +69,19 @@ class TInputDialog
         
         if ($form instanceof TQuickForm)
         {
-            $form->delActions();
             $actionButtons = $form->getActionButtons();
+            $form->delActions();
             
             if ($actionButtons)
             {
                 foreach ($actionButtons as $key => $button)
                 {
-                    $button->{'data-toggle'} = "modal";
-                    $button->{'data-dismiss'} = 'modal';
-                    $button->addFunction( "\$( '.modal-backdrop' ).last().remove(); \$('#{$this->id}').modal('hide'); \$('body').removeClass('modal-open');" );
+                    if ($button->getAction()->getParameter('stay-open') !== 1)
+                    {
+                        $button->addFunction( "tdialog_close('{$this->id}')" );
+                        $button->{'data-toggle'} = "modal";
+                        $button->{'data-dismiss'} = 'modal';
+                    }
                     $buttons[] = $button;
                 }
             }
@@ -86,9 +89,12 @@ class TInputDialog
         else
         {
             $button = new TButton(strtolower(str_replace(' ', '_', $caption)));
-            $button->{'data-toggle'} = "modal";
-            $button->{'data-dismiss'} = 'modal';
-            $button->addFunction( "\$( '.modal-backdrop' ).last().remove(); \$('#{$this->id}').modal('hide'); \$('body').removeClass('modal-open');" );
+            if ($action->getParameter('stay-open') !== 1)
+            {
+                $button->{'data-toggle'} = "modal";
+                $button->{'data-dismiss'} = 'modal';
+                $button->addFunction( "tdialog_close('{$this->id}')" );
+            }
             $button->setAction( $action );
             $button->setLabel( $caption );
             $buttons[] = $button;

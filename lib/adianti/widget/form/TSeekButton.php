@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Control\TAction;
@@ -158,13 +158,21 @@ class TSeekButton extends TEntry implements AdiantiWidgetInterface
                         $ajaxAction->setParameter('receive_field', $this->action->getParameter('receive_field'));
                         $ajaxAction->setParameter('criteria',      $this->action->getParameter('criteria'));
                     }
+                    else
+                    {
+                    	if($actionParameters = $this->action->getParameters())
+                    	{
+	                    	foreach ($actionParameters as $key => $value) 
+	                    	{
+	                    		$ajaxAction->setParameter($key, $value);
+	                    	}                    		
+                    	}                    	                    
+                    }
                     $ajaxAction->setParameter('form_name', $this->formName);
                     $string_action = $ajaxAction->serialize(FALSE);
                     if ($this->useOutEvent)
                     {
-                        $this->setProperty('seekaction', "serialform=(\$('#{$this->formName}').serialize());
-                                                         __adianti_ajax_lookup('$string_action&'+serialform, document.{$this->formName}.{$this->name})");
-                                                      
+                        $this->setProperty('seekaction', "__adianti_post_lookup('{$this->formName}', '{$string_action}', document.{$this->formName}.{$this->name})");
                         $this->setProperty('onBlur', $this->getProperty('seekaction'), FALSE);
                     }
                 }

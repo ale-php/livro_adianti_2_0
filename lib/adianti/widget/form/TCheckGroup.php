@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Form;
+namespace Adianti\Widget\Form;
 
 use Adianti\Widget\Form\AdiantiWidgetInterface;
 use Adianti\Core\AdiantiCoreTranslator;
@@ -31,6 +31,7 @@ class TCheckGroup extends TField implements AdiantiWidgetInterface
     private $breakItems;
     private $buttons;
     private $labels;
+    private $allItemsChecked;
     protected $formName;
 
     /**
@@ -41,6 +42,14 @@ class TCheckGroup extends TField implements AdiantiWidgetInterface
     {
         parent::__construct($name);
         parent::setSize(NULL);
+    }
+    
+    /**
+     * Check all options
+     */
+    public function checkAll()
+    {
+        $this->allItemsChecked = TRUE;
     }
     
     /**
@@ -65,7 +74,7 @@ class TCheckGroup extends TField implements AdiantiWidgetInterface
      */
     public function setBreakItems($breakItems)
     {
-        	$this->breakItems = $breakItems;
+        $this->breakItems = $breakItems;
     }
     
     /**
@@ -183,9 +192,9 @@ class TCheckGroup extends TField implements AdiantiWidgetInterface
             foreach ($this->items as $index => $label)
             {
                 $button = $this->buttons[$index];
-                
+                $button->setName($this->name.'[]');
                 // verify if the checkbutton is checked
-                if (@in_array($index, $this->value))
+                if (@in_array($index, $this->value) OR $this->allItemsChecked)
                 {
                     $button->setValue($index); // value=indexvalue (checked)
                 }
@@ -210,8 +219,7 @@ class TCheckGroup extends TField implements AdiantiWidgetInterface
                             throw new Exception(AdiantiCoreTranslator::translate('You must pass the ^1 (^2) as a parameter to ^3', __CLASS__, $this->name, 'TForm::setFields()') );
                         }
                         $string_action = $this->changeAction->serialize(FALSE);
-                        $button->setProperty('onChange', "serialform=(\$('#{$this->formName}').serialize());
-                                                          __adianti_ajax_lookup('$string_action&'+serialform, this)");
+                        $button->setProperty('onChange', "__adianti_post_lookup('{$this->formName}', '{$string_action}', this)");
                     }
                 }
                 else

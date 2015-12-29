@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Wrapper;
+namespace Adianti\Widget\Wrapper;
 
 use Adianti\Core\AdiantiCoreTranslator;
 use Adianti\Widget\Form\TCheckGroup;

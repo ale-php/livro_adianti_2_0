@@ -1,11 +1,12 @@
 <?php
-Namespace Adianti\Widget\Wrapper;
+namespace Adianti\Widget\Wrapper;
 
 use Adianti\Core\AdiantiCoreTranslator;
 use Adianti\Widget\Base\TElement;
 use Adianti\Widget\Base\TScript;
 use Adianti\Widget\Form\TMultiSearch;
 use Adianti\Database\TCriteria;
+use Adianti\Widget\Form\TForm;
 
 use Exception;
 
@@ -29,13 +30,16 @@ class TDBMultiSearch extends TMultiSearch
     protected $height;
     protected $minLength;
     protected $maxSize;
-    private $database;
-    private $model;
-    private $key;
-    private $column;
-    private $operator;
-    private $orderColumn;
-    private $criteria;
+    protected $database;
+    protected $model;
+    protected $key;
+    protected $column;
+    protected $operator;
+    protected $orderColumn;
+    protected $criteria;
+    protected $mask;
+    protected $service;
+    protected $seed;
     
     /**
      * Class Constructor
@@ -79,6 +83,18 @@ class TDBMultiSearch extends TMultiSearch
         $this->operator = 'like';
         $this->orderColumn = isset($orderColumn) ? $orderColumn : NULL;
         $this->criteria = $criteria;
+        $this->mask = '{'.$value.'}';
+        $this->service = 'AdiantiMultiSearchService';
+        $this->seed = APPLICATION_NAME.'s8dkld83kf73kf094';
+    }
+    
+    /**
+     * Define the search service
+     * @param $service Search service
+     */
+    public function setService($service)
+    {
+        $this->service = $service;
     }
     
     /**
@@ -88,6 +104,15 @@ class TDBMultiSearch extends TMultiSearch
     public function setOperator($operator)
     {
         $this->operator = $operator;
+    }
+    
+    /**
+     * Define the display mask
+     * @param $mask Show mask
+     */
+    public function setMask($mask)
+    {
+        $this->mask = $mask;
     }
     
     /**
@@ -101,7 +126,7 @@ class TDBMultiSearch extends TMultiSearch
         $this->setProperty('style', "width:{$this->size}px", FALSE); //aggregate style info
         $multiple = $this->maxSize == 1 ? 'false' : 'true';
         
-        $load_items = '';
+        $load_items = 'undefined';
         if ($this->initialItems)
         {
             $new_items = array();
@@ -113,11 +138,11 @@ class TDBMultiSearch extends TMultiSearch
             
             if ($multiple == 'true')
             {
-                $load_items = '$("#'.$this->id.'").select2("data", '.json_encode($new_items).');';
+                $load_items = json_encode($new_items);
             }
             else
             {
-                $load_items = '$("#'.$this->id.'").select2("data", '.json_encode($new_item).');';
+                $load_items = json_encode($new_item);
             }
         }
         
@@ -125,60 +150,35 @@ class TDBMultiSearch extends TMultiSearch
         $criteria = '';
         if ($this->criteria)
         {
-            $criteria = base64_encode(serialize($this->criteria));
+            $criteria = str_replace(array('+', '/'), array('-', '_'), base64_encode(serialize($this->criteria)));
         }
         
-        $seed = APPLICATION_NAME.'s8dkld83kf73kf094';
-        $hash = md5("{$seed}{$this->database}{$this->key}{$this->column}{$this->model}");
+        $hash = md5("{$this->seed}{$this->database}{$this->key}{$this->column}{$this->model}");
         $length = $this->minLength;
-
-        $class = 'AdiantiMultiSearchService';
+        
+        $class = $this->service;
         $callback = array($class, 'onSearch');
         $method = $callback[1];
         
         $search_word = AdiantiCoreTranslator::translate('Search');
-        $sp = <<<HTML
-            $('#{$this->id}').select2(
-            {   
-                minimumInputLength: '{$length}',
-                separator: '||',
-                placeholder: '{$search_word}',
-                multiple: $multiple,
-                id: function(e) { return e.id+"::"+e.text; },
-                ajax: {
-                    url: "engine.php?class={$class}&method={$method}&static=1&database={$this->database}&key={$this->key}&column={$this->column}&model={$this->model}&orderColumn={$orderColumn}&criteria={$criteria}&operator={$this->operator}",
-                    dataType: 'json',
-                    quietMillis: 100,
-                    data: function(value, page) {
-                        return {
-                            value: value,
-                            hash: '{$hash}'
-                        };
-                    },
-                    results: function(data, page ) 
-                    {
-                        var aa = [];
-                        $(data.result).each(function(i) {
-                            var item = this.split('::');
-                            aa.push({
-                                id: item[0],
-                                text: item[1]
-                            });
-                        });               
-
-                        return {                             
-                            results: aa 
-                        }
-                    }
-                },             
-                              
-            });
-            $('#s2id_{$this->id} > .select2-choices').height('{$this->height}px').width('{$this->size}px').css('overflow-y','auto');
-            $load_items
-HTML;
-
+        $url = "engine.php?class={$class}&method={$method}&static=1&database={$this->database}&key={$this->key}&column={$this->column}&model={$this->model}&orderColumn={$orderColumn}&criteria={$criteria}&operator={$this->operator}&mask={$this->mask}";
+        
+        $change_action = 'function() {}';
+        if (isset($this->changeAction))
+        {
+            if (!TForm::getFormByName($this->formName) instanceof TForm)
+            {
+                throw new Exception(AdiantiCoreTranslator::translate('You must pass the ^1 (^2) as a parameter to ^3', __CLASS__, $this->name, 'TForm::setFields()') );
+            }
+            
+            $string_action = $this->changeAction->serialize(FALSE);
+            $change_action = "function() { serialform=tmultisearch_get_form_data('{$this->formName}', '{$this->name}');
+                                         __adianti_ajax_lookup('$string_action&'+serialform, this); }";
+        }
+        
+        TScript::create(" tdbmultisearch_start( '{$this->id}', '{$length}', '{$this->maxSize}', '{$search_word}', $multiple, '{$url}', '{$this->size}px', '{$this->height}px', {$load_items}, '{$hash}', {$change_action} ); ");
+        
         // shows the component
         $this->tag->show();
-        TScript::create($sp);
     }
 }

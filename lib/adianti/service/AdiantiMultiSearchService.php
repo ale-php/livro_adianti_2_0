@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Service;
+namespace Adianti\Service;
 
 use Adianti\Database\TTransaction;
 use Adianti\Database\TRepository;
@@ -31,6 +31,7 @@ class AdiantiMultiSearchService
         $seed = APPLICATION_NAME.'s8dkld83kf73kf094';
         $hash = md5("{$seed}{$param['database']}{$param['key']}{$param['column']}{$param['model']}");
         $operator = $param['operator'] ? $param['operator'] : 'like';
+        $mask = $param['mask'];
         
         if ($hash == $param['hash'])
         {
@@ -41,7 +42,7 @@ class AdiantiMultiSearchService
                 $criteria = new TCriteria;
                 if ($param['criteria'])
                 {
-                    $criteria = unserialize(base64_decode($param['criteria']));
+                    $criteria = unserialize( base64_decode(str_replace(array('-', '_'), array('+', '/'), $param['criteria'])) );
                 }
     
                 $column = $param['column'];
@@ -64,26 +65,31 @@ class AdiantiMultiSearchService
                 {
                     foreach ($collection as $object)
                     {
-                    	$k = $object->$key;
-                    	$c = $object->$column;
+                        $k = $object->$key;
+                        $array_object = $object->toArray();
+                        $maskvalues = $mask;
+                        foreach ($array_object as $property => $value)
+                        {
+                            $maskvalues = str_replace('{'.$property.'}', $value, $maskvalues);
+                        }
+                        $c = $maskvalues;
                     	if($k != null && $c != null )
                     	{
                             if (utf8_encode(utf8_decode($c)) !== $c ) // SE NÃO UTF8
-                        	{
-                            	$c = utf8_encode($c);
-                        	}
+                            {
+                                $c = utf8_encode($c);
+                            }
                             if (!empty($k) && !empty($c))
                             {
-                        	   $items[] = "{$k}::{$c}";
+                                $items[] = "{$k}::{$c}";
                             }
-                    	}
+                        }
                     }
                 }
                 
-        		$ret = array();
-            	$ret['result'] = $items;
-        		
-            	echo json_encode($ret);
+                $ret = array();
+                $ret['result'] = $items;
+                echo json_encode($ret);
                 TTransaction::close();
             }
             catch (Exception $e)

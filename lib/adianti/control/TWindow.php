@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Control;
+namespace Adianti\Control;
 
 use Adianti\Widget\Container\TJQueryDialog;
 
@@ -26,6 +26,19 @@ class TWindow extends TPage
         $this->wrapper->setModal(TRUE);
         $this->wrapper->{'widget'} = 'T'.'Window';
         parent::add($this->wrapper);
+    }
+    
+    /**
+     * Create a window
+     */
+    public static function create($title, $width, $height)
+    {
+        $inst = new self;
+        $inst->setIsWrapped(TRUE);
+        $inst->setTitle($title);
+        $inst->setSize($width, $height);
+        unset($inst->wrapper->{'widget'});
+        return $inst;
     }
     
     /**

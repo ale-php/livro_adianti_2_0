@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Container;
+namespace Adianti\Widget\Container;
 
 use Adianti\Widget\Base\TElement;
 use Adianti\Widget\Base\TScript;
@@ -26,13 +26,13 @@ class TExpander extends TElement
     public function __construct($label = '')
     {
         parent::__construct('div');
-        $this->{'id'}    = 'texpander_'.uniqid();
+        $this->{'id'}    = 'texpander_'.mt_rand(1000000000, 1999999999);
         $this->{'class'} = 'dropdown';
         
         $this->button = new TElement('button');
         $this->button->{'class'} = 'btn btn-default dropdown-toggle';
         $this->button->{'type'} = 'button';
-        $this->button->{'id'}   = 'button_'.uniqid();
+        $this->button->{'id'}   = 'button_'.mt_rand(1000000000, 1999999999);
         $this->button->{'data-toggle'} = 'dropdown';
         $this->button->add($label);
         

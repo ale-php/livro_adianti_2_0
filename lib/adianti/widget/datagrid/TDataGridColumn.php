@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Datagrid;
+namespace Adianti\Widget\Datagrid;
 
 use Adianti\Control\TAction;
 
@@ -99,7 +99,7 @@ class TDataGridColumn
         // verify if the column has an actions
         if ($this->action)
         {
-            return $this->action->serialize();
+            return $this->action;
         }
     }
     
@@ -131,7 +131,7 @@ class TDataGridColumn
      * Define a callback function to be applyed over the column's data
      * @param $callback  A function name of a method of an object
      */
-    public function setTransformer($callback)
+    public function setTransformer(Callable $callback)
     {
         $this->transformer = $callback;
     }

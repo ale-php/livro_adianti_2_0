@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Validator;
+namespace Adianti\Validator;
 
 use Adianti\Core\AdiantiCoreTranslator;
 use Exception;

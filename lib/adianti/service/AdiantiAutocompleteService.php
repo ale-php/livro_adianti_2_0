@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Service;
+namespace Adianti\Service;
 
 use Adianti\Database\TTransaction;
 use Adianti\Database\TRepository;

@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Base;
+namespace Adianti\Widget\Base;
 
 use Adianti\Control\TPage;
 
@@ -67,6 +67,18 @@ class TStyle
         
         // store the assigned tag property
         $this->properties[$name] = $value;
+    }
+    
+    /**
+     * Executed whenever a property is read
+     * @param  $name    = property's name
+     */
+    public function __get($name)
+    {
+        // replaces "_" by "-" in the property's name
+        $name = str_replace('_', '-', $name);
+        
+        return $this->properties[$name];
     }
     
     /**

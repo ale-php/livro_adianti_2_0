@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Widget\Util;
+namespace Adianti\Widget\Util;
 
 use Adianti\Widget\Base\TElement;
 use Adianti\Widget\Base\TScript;
@@ -19,15 +19,24 @@ class TTreeView extends TElement
     private $itemIcon;
     private $itemAction;
     private $collapsed;
+    private $callback;
     
     /**
      * Class Constructor
      */
     public function __construct()
     {
-        $this->{'id'} = 'ttreeview_'.uniqid();
+        $this->{'id'} = 'ttreeview_'.mt_rand(1000000000, 1999999999);
         $this->collapsed = FALSE;
         parent::__construct('ul');
+    }
+    
+    /**
+     * Set node transformer
+     */
+    public function setTransformer($callback)
+    {
+        $this->callback = $callback;
     }
     
     /**
@@ -108,8 +117,14 @@ class TTreeView extends TElement
                         $element->{'onClick'} = "__adianti_ajax_exec('{$string_action}')";
                         $element->{'id'} = $this->{'id'} . '_' . md5($key);
                     }
-                    
+                    $span->{'key'} = $key;
                     $element->add($span);
+                    
+                    if (is_callable($this->callback))
+                    {
+                        call_user_func($this->callback, $span);
+                    }
+                    
                     parent::add($element);
                 }
                 else if (is_array($option))
@@ -156,9 +171,14 @@ class TTreeView extends TElement
                         $string_action = $this->itemAction->serialize(FALSE);
                         $element->{'onClick'} = "__adianti_ajax_exec('{$string_action}')";
                         $element->{'id'} = $this->{'id'} . '_' . md5($key);
-                        
                     }
+                    $span->{'key'} = $key;
                     $element->add($span);
+                    
+                    if (is_callable($this->callback))
+                    {
+                        call_user_func($this->callback, $span);
+                    }
                 }
                 else if (is_array($option))
                 {

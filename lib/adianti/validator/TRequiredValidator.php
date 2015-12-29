@@ -1,5 +1,5 @@
 <?php
-Namespace Adianti\Validator;
+namespace Adianti\Validator;
 
 use Adianti\Validator\TFieldValidator;
 use Adianti\Core\AdiantiCoreTranslator;
@@ -24,7 +24,7 @@ class TRequiredValidator extends TFieldValidator
      */
     public function validate($label, $value, $parameters = NULL)
     {
-        if ( (is_scalar($value) AND trim($value)=='') OR (is_array($value) AND count($value)==1 AND empty($value[0])) OR (is_array($value) AND empty($value)) )
+        if ( (is_scalar($value) AND trim($value)=='') OR (is_array($value) AND count($value)==1 AND isset($value[0]) AND empty($value[0])) OR (is_array($value) AND empty($value)) )
         {
             throw new Exception(AdiantiCoreTranslator::translate('The field ^1 is required', $label));
         }
