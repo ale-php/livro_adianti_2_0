@@ -13,7 +13,6 @@ use Adianti\Widget\Wrapper\TDBMultiSearch;
 use Adianti\Widget\Container\TTable;
 use Adianti\Widget\Container\TTableRow;
 use Adianti\Widget\Container\THBox;
-
 use StdClass;
 
 /**
@@ -190,7 +189,7 @@ class TMultiField extends TField implements AdiantiWidgetInterface
                     foreach ($std_object as $subkey => $value)
                     {
                         // substitui pq o ttable gera com quebra de linha no multifield
-                        $obj_item->$subkey = utf8_encode(str_replace("\n",'',URLdecode($value)));
+                        $obj_item->$subkey = str_replace("\n",'',URLdecode($value));
                         // verifica se é um json
                         if (is_array(json_decode($obj_item->$subkey)))
                         {
